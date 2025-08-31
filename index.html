@@ -81,4 +81,476 @@
     .back{width:36px;height:36px;border-radius:999px;background:var(--teal);color:#fff;display:grid;place-items:center;border:0;cursor:pointer}
     .table{background:var(--panel);border-radius:var(--r-lg);box-shadow:var(--shadow);overflow:hidden}
     table{width:100%;border-collapse:collapse}
-    th,td{padding:10px 12px;bor
+    th,td{padding:10px 12px;border-bottom:1px solid var(--line);font-size:.95rem}
+    th{color:var(--muted);text-align:left}
+    tr:last-child td{border-bottom:0}
+    .chip{display:inline-block;padding:4px 10px;border-radius:999px;font-weight:800;font-size:.9rem}
+    .chip.mint{background:var(--mint)}.chip.amber{background:var(--amber)}.chip.coral{background:var(--coral)}.chip.neutral{background:var(--chip)}
+    .row-actions{display:flex;gap:6px}
+    .btn.xs{padding:6px 8px;font-size:.8rem;font-weight:800;border-radius:999px}
+    .btn.ghost.xs{border-color:#E0E0E0}
+    .edit-card{margin-top:12px;background:var(--panel);border-radius:var(--r-lg);box-shadow:var(--shadow);padding:12px}
+    .form{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+    input[type="date"],select.window{appearance:none;border:1px solid var(--gray);border-radius:999px;padding:10px 12px;background:#fff;color:var(--ink)}
+
+    .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(88px + env(safe-area-inset-bottom));background:#ffffff;border:1px solid #E7F1F0;box-shadow:var(--shadow);padding:10px 12px;border-radius:12px;font-weight:700;color:var(--ink);display:none;z-index:50}
+
+    /* Accordion bits */
+    .acc-header{width:100%;display:flex;align-items:center;gap:10px;justify-content:space-between;padding:10px 12px;border:1px solid #E7F1F0;border-radius:12px;background:#F7FBFA;cursor:pointer}
+    .acc-title{font-weight:800}
+    .acc-status{font-size:.85rem;color:var(--muted);margin-left:auto;margin-right:6px}
+    .chev{transition:transform .2s ease}
+    .acc-header[aria-expanded="true"] .chev{transform:rotate(180deg)}
+    .acc-content[hidden]{display:none}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+
+    <!-- HOME -->
+    <section id="home" class="screen active" aria-labelledby="homeTitle">
+      <div class="header">
+        <div class="brand" aria-label="Treaty">
+          <div class="cat">
+            <!-- Fallback inline SVG icon so this file is self-contained -->
+            <img alt="Treaty cat logo" src="data:image/svg+xml;utf8,<?xml version='1.0' encoding='UTF-8'?><svg xmlns='http://www.w3.org/2000/svg' width='256' height='256' viewBox='0 0 256 256'><rect rx='40' width='256' height='256' fill='%23F8F4EF'/><circle cx='128' cy='140' r='70' fill='%23FFE3A1'/><ellipse cx='100' cy='130' rx='12' ry='8' fill='%232E2E2E'/><ellipse cx='156' cy='130' rx='12' ry='8' fill='%232E2E2E'/><path d='M88 78l30-20 10 24M168 78l-30-20-10 24' stroke='%23838383' stroke-width='6' fill='none' stroke-linecap='round'/><path d='M112 156c8 8 24 8 32 0' stroke='%232E2E2E' stroke-width='8' fill='none' stroke-linecap='round'/><circle cx='136' cy='164' r='4' fill='%23FFB3AB'/><circle cx='120' cy='164' r='4' fill='%23FFB3AB'/></svg>"/>
+          </div>
+          <h1 id="homeTitle">Treaty</h1>
+        </div>
+      </div>
+
+      <div class="meter-card">
+        <div class="meter" aria-label="Healthy percentage">
+          <div class="fill" id="meterFill" style="height:0%"></div>
+          <div class="marker" id="meterMarker" style="bottom:80%"></div>
+        </div>
+        <div class="side">
+          <div class="pct" id="meterPct">0%</div>
+
+          <div class="kv">
+            <div class="pill" id="pillAllowed">Allowed: —</div>
+            <div class="pill" id="pillDebt">Used: —</div>
+            <div class="pill" id="pillLeft">Left: —</div>
+          </div>
+
+          <div class="bar" style="justify-content:space-between">
+            <div class="segment" role="tablist" aria-label="Days window" id="daysToggle">
+              <button class="seg" data-win="14" role="tab">14d</button>
+              <button class="seg" data-win="30" role="tab">30d</button>
+              <button class="seg" data-win="60" role="tab">60d</button>
+              <button class="seg" data-win="90" role="tab">90d</button>
+            </div>
+            <div class="helper" id="windowHelp">Recalculates last 30 days</div>
+          </div>
+
+          <div class="legend-list" aria-live="polite">
+            <div class="legend-item"><span class="label">Target</span><span class="value">≥80%</span></div>
+            <div class="legend-item"><span class="label">Recovery</span><span class="value" id="kpiRecovery">—</span></div>
+            <div class="legend-item"><span class="label">Streaks</span><span class="value" id="kpiStreaks">—</span></div>
+          </div>
+
+          <svg class="spark" viewBox="0 0 100 30" preserveAspectRatio="none" id="spark">
+            <polyline fill="none" stroke="#A7E0DC" stroke-width="2" points=""/>
+          </svg>
+
+          <!-- Challenge Mode (v1 forward horizon) -->
+          <details class="challenge" id="chalCard">
+            <summary style="cursor:pointer;font-weight:700;color:var(--ink)">Challenge (optional)</summary>
+            <div class="bar">
+              <label class="muted small">Horizon</label>
+              <select id="chalHorizon">
+                <option value="7">7d</option>
+                <option value="14" selected>14d</option>
+                <option value="21">21d</option>
+                <option value="30">30d</option>
+              </select>
+              <button class="btn ok" id="chalStart">Start today</button>
+              <button class="btn ghost" id="chalStop">End challenge</button>
+              <div class="small muted" id="chalRange" style="margin-left:auto">—</div>
+            </div>
+            <div class="legend-list small">
+              <div class="legend-item"><span class="label">Status</span><span class="value" id="chalStatus">—</span></div>
+              <div class="legend-item"><span class="label">Budget</span><span class="value" id="chalBudget">—</span></div>
+              <div class="legend-item"><span class="label">Spent / Left</span><span class="value" id="chalSpentLeft">—</span></div>
+              <div class="legend-item"><span class="label">Rule</span><span class="value" id="chalExplain">Strict allowance, no decay</span></div>
+            </div>
+          </details>
+
+        </div>
+      </div>
+
+      <div class="footer">
+        <div>30d rolling = core. Data stored locally.</div>
+        <div class="link" id="toHistory">View History</div>
+      </div>
+      <div aria-hidden="true" style="height:16px"></div>
+      <div class="fab">
+        <div class="row">
+          <button class="btn mint"  id="add1">Small (+1)</button>
+          <button class="btn amber" id="add2">Medium (+2)</button>
+          <button class="btn coral" id="add3">Large (+3)</button>
+          <button class="btn ghost" id="undo">Undo</button>
+        </div>
+      </div>
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    </section>
+
+    <!-- HISTORY -->
+    <section id="history" class="screen" aria-labelledby="historyTitle">
+      <div class="toolbar">
+        <button class="back" id="backHome" aria-label="Back to Home">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <h2 id="historyTitle" style="margin:0;font-size:1.1rem;font-weight:800">History</h2>
+      </div>
+      <div class="table">
+        <table aria-describedby="historyTitle">
+          <thead><tr><th>Date</th><th>Points</th><th>Actions</th></tr></thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+      </div>
+      <div class="edit-card">
+        <h3 style="margin:0 0 8px;font-size:1rem;font-weight:800;color:var(--ink)">Add / Edit a specific day</h3>
+        <div class="form">
+          <input type="date" id="datePicker" />
+          <button class="btn mint"  id="mark1">+1</button>
+          <button class="btn amber" id="mark2">+2</button>
+          <button class="btn coral" id="mark3">+3</button>
+          <button class="btn ghost" id="mark0">Reset</button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    // ===== Keys (v1) =====
+    const KEY='mvp_points_v1';
+    const PREF_KEY='mvp_prefs_v1';
+    const CHAL_KEY='mvp_chal_v1';
+    const CHAL_COLLAPSE_KEY='mvp_chal_collapsed_v1';
+
+    // Migrate older keys if present
+    (function migrate(){
+      try{
+        const old=localStorage.getItem('treaty_points_v1');
+        if(old && !localStorage.getItem(KEY)) localStorage.setItem(KEY, old);
+        const oldp=localStorage.getItem('treaty_prefs_v1');
+        if(oldp && !localStorage.getItem(PREF_KEY)) localStorage.setItem(PREF_KEY, oldp);
+      }catch(e){}
+    })();
+
+    const $ = s => document.querySelector(s);
+    const $$ = s => Array.from(document.querySelectorAll(s));
+    const todayStr = (d=new Date()) => new Date(d.getFullYear(),d.getMonth(),d.getDate()).toISOString().slice(0,10);
+
+    function load(){
+      let rows=[],prefs={window:30};
+      try{rows=JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){}
+      try{prefs=Object.assign({window:30},JSON.parse(localStorage.getItem(PREF_KEY)||'{}'))}catch(e){}
+      const map=new Map();
+      for(const r of rows){
+        const ds=String(r.date||r).slice(0,10);
+        const n=Math.max(0,Number(r.n||1));
+        map.set(ds,(map.get(ds)||0)+n);
+      }
+      const data=[...map.entries()].map(([date,n])=>({date,n})).sort((a,b)=>a.date.localeCompare(b.date));
+      return {data,window:Number(prefs.window)||30};
+    }
+    function save(data,window){
+      const clean=data.filter(r=>r.n>0).sort((a,b)=>a.date.localeCompare(b.date));
+      localStorage.setItem(KEY,JSON.stringify(clean));
+      localStorage.setItem(PREF_KEY,JSON.stringify({window:Number(window)||30}));
+    }
+
+    // ===== Core rolling-window stats (20% budget, 1/day decay) =====
+    function stats(data,windowDays){
+      const end=new Date();end.setHours(0,0,0,0);
+      const start=new Date(end);start.setDate(end.getDate()-(windowDays-1));
+      const byDate=new Map(data.map(r=>[r.date,r.n]));
+      let debt=0;const rows=[];
+      for(let i=0;i<windowDays;i++){
+        const d=new Date(start);d.setDate(start.getDate()+i);
+        const ds=d.toISOString().slice(0,10);
+        const pts=byDate.get(ds)||0;
+        if(pts>0){debt+=pts;rows.push({date:ds,n:pts});}
+        else if(debt>0){debt-=1;}
+      }
+      const allowed=Math.floor(0.2*windowDays);
+      const healthyPct=Math.round(((windowDays-Math.min(windowDays,debt))/windowDays)*100);
+      let recovery=null;
+      if(debt>allowed){
+        const rec=new Date(end);rec.setDate(end.getDate()+(debt-allowed));
+        recovery=rec.toISOString().slice(0,10);
+      }
+      // streaks (current healthy run and best within window)
+      let cur=0,best=0,tmp=0;
+      for(let i=0;i<windowDays;i++){
+        const d=new Date(end);d.setDate(end.getDate()-i);
+        const ds=d.toISOString().slice(0,10);
+        if((byDate.get(ds)||0)>0){best=Math.max(best,tmp); if(i===0)cur=0; tmp=0;}
+        else {tmp++; if(i===0)cur=1;}
+      }
+      best=Math.max(best,tmp);
+      return {healthyPct,allowed,debt,rows,recovery,cur:cur||0,best:best||0};
+    }
+
+    // ===== Challenge (forward horizon) — strict allowance, no decay =====
+    function chalLoad(){ try{return JSON.parse(localStorage.getItem(CHAL_KEY)||'{}')}catch(e){return{}} }
+    function chalSave(st){ localStorage.setItem(CHAL_KEY, JSON.stringify(st||{})); }
+    function addDays(ds,n){const d=new Date(ds); d.setDate(d.getDate()+Number(n||0)); return todayStr(d);}
+    function diffDays(a,b){const da=new Date(a),db=new Date(b); da.setHours(0,0,0,0); db.setHours(0,0,0,0); return Math.round((db-da)/86400000);}
+
+    function chalCalc(st){
+      if(!st||!st.active) return {active:false};
+      const start=st.start, end=st.end, horizon=Number(st.horizon)||14;
+      const allowed=Math.floor(0.2*horizon);
+      // spent = sum of entries within [start,end]
+      const base=load().data; const byDate=new Map(base.map(r=>[r.date,r.n]));
+      let spent=0; for(let i=0;i<=diffDays(start,end);i++){ const ds=addDays(start,i); spent += (byDate.get(ds)||0); }
+      const left=Math.max(0, allowed - spent);
+      const today=todayStr();
+      const phase = (today<start)?'scheduled': (today>end?'complete':'in-progress');
+      const onTrack = spent<=allowed;
+      return {active:true,start,end,horizon,allowed,spent,left,phase,onTrack};
+    }
+
+    // ===== Mutations =====
+    function setWindow(n){ const st=load(); save(st.data, Number(n)); render(); }
+
+    function addPoints(ds, delta){
+      const st=load(); const map=new Map(st.data.map(r=>[r.date,r.n]));
+      const cur=map.get(ds)||0; const next=Math.max(0,cur+delta);
+      if(next===0) map.delete(ds); else map.set(ds,next);
+      const out=[...map.entries()].map(([date,n])=>({date,n}));
+      save(out, st.window); render();
+      notify((delta>=0?'+':'')+delta+' on '+ds);
+    }
+    function setPoints(ds, n){
+      const st=load(); const map=new Map(st.data.map(r=>[r.date,r.n]));
+      const prev=map.get(ds)||0; if(n<=0) map.delete(ds); else map.set(ds,n);
+      const out=[...map.entries()].map(([date,n])=>({date,n}));
+      save(out, st.window); render();
+      const delta = n - prev;
+      notify((delta>=0?'Set ':'Set ')+ds+' to '+(n>0?('+'+n):'0'));
+    }
+
+    // ===== Rendering =====
+    function render(){
+      const st=load(); const s=stats(st.data, st.window);
+
+      // Meter + headline + pills
+      $('#meterFill').style.height=Math.max(0,Math.min(100,s.healthyPct))+'%';
+      $('#meterPct').textContent=s.healthyPct+'%';
+      $('#pillAllowed').textContent='Allowed: '+s.allowed+' pts';
+      $('#pillDebt').textContent='Used: '+s.debt+' pts';
+      $('#pillLeft').textContent='Left: '+Math.max(0,s.allowed-s.debt)+' pts';
+      $('#windowHelp').textContent='Recalculates last '+st.window+' days';
+
+      // Vertical legend
+      const rec=$('#kpiRecovery'); if(rec) rec.textContent = s.recovery || '—';
+      const strk=$('#kpiStreaks'); if(strk) strk.textContent = s.cur+' / '+s.best;
+
+      // Sparkline (last 7 in-window entries)
+      const last7=s.rows.slice(-7);
+      const max=Math.max(1, ...last7.map(r=>r.n), 3);
+      const coords=last7.map((r,i)=>{const x=(i/(Math.max(1,last7.length-1)))*100;const y=30-(r.n/max)*28;return x.toFixed(1)+','+y.toFixed(1)}).join(' ');
+      const pl=document.querySelector('#spark polyline'); if(pl) pl.setAttribute('points', coords);
+
+      // Toggle state
+      $$('#daysToggle .seg').forEach(b=> b.classList.toggle('active', Number(b.dataset.win)===st.window));
+
+      // Target marker (80%)
+      const marker=$('#meterMarker'); if(marker){ marker.style.bottom = (100-80)+'%'; }
+
+      // Challenge UI
+      const chal=chalCalc(chalLoad());
+      const rangeEl=$('#chalRange');
+      const budgetEl=$('#chalBudget');
+      const spentLeftEl=$('#chalSpentLeft');
+      const statusEl=$('#chalStatus');
+      const headerStatus=$('#chalHeaderStatus');
+
+      if(!chal.active){
+        if(rangeEl) rangeEl.textContent='—';
+        if(budgetEl) budgetEl.textContent='—';
+        if(spentLeftEl) spentLeftEl.textContent='—';
+        const sText='Inactive';
+        if(statusEl) statusEl.textContent=sText;
+        if(headerStatus) headerStatus.textContent=sText;
+      } else {
+        if(rangeEl) rangeEl.textContent=`${chal.start} → ${chal.end}`;
+        if(budgetEl) budgetEl.textContent=`${chal.allowed} pts`;
+        if(spentLeftEl) spentLeftEl.textContent=`${chal.spent} / ${chal.left} pts`;
+        const sText=(chal.phase==='complete' ? (chal.onTrack?'Completed: success':'Completed: failed') : `In progress • ${chal.left} left`);
+        if(statusEl) statusEl.textContent=sText;
+        if(headerStatus) headerStatus.textContent=sText;
+      }
+
+      // History list (in-window)
+      const body=$('#historyBody'); if(body){
+        body.innerHTML='';
+        const rows=s.rows.slice().reverse();
+        if(rows.length===0){
+          const tr=document.createElement('tr');
+          const td=document.createElement('td'); td.colSpan=3; td.style.color='var(--muted)'; td.textContent='No entries in this window.';
+          tr.appendChild(td); body.appendChild(tr);
+        } else {
+          rows.forEach(r=>{
+            const tr=document.createElement('tr');
+            const td1=document.createElement('td'); td1.textContent=r.date; tr.appendChild(td1);
+            const td2=document.createElement('td'); const chip=document.createElement('span'); chip.className='chip '+(r.n>=3?'coral': r.n===2?'amber': r.n===1?'mint':'neutral'); chip.textContent='+'+r.n; td2.appendChild(chip); tr.appendChild(td2);
+            const td3=document.createElement('td'); const acts=document.createElement('div'); acts.className='row-actions';
+            ['+1','+2','+3','−1','Reset'].forEach(lbl=>{
+              const b=document.createElement('button'); b.className='btn ghost xs'; b.textContent=lbl;
+              b.onclick=()=>{ if(lbl==='+1') addPoints(r.date,1);
+                              if(lbl==='+2') addPoints(r.date,2);
+                              if(lbl==='+3') addPoints(r.date,3);
+                              if(lbl==='−1') addPoints(r.date,-1);
+                              if(lbl==='Reset') setPoints(r.date,0); };
+              acts.appendChild(b);
+            });
+            td3.appendChild(acts); tr.appendChild(td3); body.appendChild(tr);
+          });
+        }
+      }
+
+      // Default date in editor
+      const dp=$('#datePicker'); if(dp && !dp.value) dp.value=todayStr();
+    }
+
+    // ===== Events =====
+    // FAB quick-add (today)
+    $('#add1').addEventListener('click', ()=>addPoints(todayStr(),1));
+    $('#add2').addEventListener('click', ()=>addPoints(todayStr(),2));
+    $('#add3').addEventListener('click', ()=>addPoints(todayStr(),3));
+    $('#undo').addEventListener('click', ()=>addPoints(todayStr(),-1));
+
+    // Nav
+    $('#toHistory').addEventListener('click', ()=>{
+      $$('.screen').forEach(s=>s.classList.remove('active'));
+      $('#history').classList.add('active');
+    });
+    $('#backHome').addEventListener('click', ()=>{
+      $$('.screen').forEach(s=>s.classList.remove('active'));
+      $('#home').classList.add('active');
+    });
+
+    // Window toggle
+    $$('#daysToggle .seg').forEach(b=> b.addEventListener('click', ()=> setWindow(b.dataset.win)) );
+
+    // History date editor
+    const getPickedDate = ()=> ($('#datePicker').value || todayStr());
+    $('#mark1').addEventListener('click', ()=> addPoints(getPickedDate(), 1));
+    $('#mark2').addEventListener('click', ()=> addPoints(getPickedDate(), 2));
+    $('#mark3').addEventListener('click', ()=> addPoints(getPickedDate(), 3));
+    $('#mark0').addEventListener('click', ()=> setPoints(getPickedDate(), 0));
+
+    // Challenge actions
+    $('#chalStart').addEventListener('click', ()=>{
+      const horizon=Number($('#chalHorizon').value)||14;
+      const start=todayStr(); const end=addDays(start, horizon-1);
+      const st={active:true,start,end,horizon}; chalSave(st); render();
+    });
+    $('#chalStop').addEventListener('click', ()=>{ chalSave({active:false}); render(); });
+    $('#chalHorizon').addEventListener('change', ()=>{
+      const st=chalLoad(); if(st&&st.active){
+        st.horizon=Number($('#chalHorizon').value)||14;
+        st.end=addDays(st.start, st.horizon-1); chalSave(st); render();
+      }
+    });
+
+    function notify(msg){
+      const el=$('#toast'); if(!el) return;
+      el.textContent=msg; el.style.display='block';
+      clearTimeout(window.__toast);
+      window.__toast=setTimeout(()=>{el.style.display='none'},1800);
+    }
+
+    // ===== Collapsible Challenge (idempotent, remembers state) =====
+    function setupChallengeAccordion(){
+      const card=document.getElementById('chalCard'); if(!card) return;
+      if(card.querySelector('.acc-header')) return; // already wrapped
+      const content=document.createElement('div'); content.className='acc-content'; content.id='chalContent';
+      while(card.firstChild){ content.appendChild(card.firstChild); }
+      const btn=document.createElement('button'); btn.type='button'; btn.className='acc-header'; btn.id='chalToggle'; btn.setAttribute('aria-expanded','false');
+      btn.innerHTML=`<span class="acc-title">Challenge</span><span class="acc-status" id="chalHeaderStatus">Inactive</span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
+      card.appendChild(btn); card.appendChild(content);
+      const collapsed = (localStorage.getItem(CHAL_COLLAPSE_KEY) ?? '1') === '1';
+      content.hidden = collapsed; btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+      btn.addEventListener('click', ()=>{
+        const nowHidden = !content.hidden; content.hidden = nowHidden;
+        btn.setAttribute('aria-expanded', nowHidden ? 'false' : 'true');
+        localStorage.setItem(CHAL_COLLAPSE_KEY, nowHidden ? '1' : '0');
+      });
+    }
+
+    function updateFabPadding(){
+      const fab=document.querySelector('.fab'); if(!fab) return;
+      const h=fab.offsetHeight;
+      document.documentElement.style.setProperty('--fab-h', h+'px');
+    }
+    window.addEventListener('resize', updateFabPadding);
+    window.addEventListener('orientationchange', updateFabPadding);
+
+    // ===== Simple in-page PWA bootstrapping (manifest + SW via Blob) =====
+    (function bootstrapPWA(){
+      // Minimal maskable icon as SVG data URL
+      const svgIcon = `<?xml version="1.0" encoding="UTF-8"?><svg xmlns='http://www.w3.org/2000/svg' width='512' height='512' viewBox='0 0 256 256'><rect rx='56' width='256' height='256' fill='%23A7E0DC'/><circle cx='128' cy='132' r='70' fill='%23FFF'/><ellipse cx='100' cy='124' rx='10' ry='7' fill='%232E2E2E'/><ellipse cx='156' cy='124' rx='10' ry='7' fill='%232E2E2E'/><path d='M112 150c8 8 24 8 32 0' stroke='%232E2E2E' stroke-width='8' fill='none' stroke-linecap='round'/></svg>`;
+      const iconUrl = 'data:image/svg+xml;base64,'+btoa(svgIcon);
+
+      const manifest = {
+        name: "Treaty",
+        short_name: "Treaty",
+        start_url: ".",
+        display: "standalone",
+        background_color: "#FAFAF5",
+        theme_color: "#A7E0DC",
+        icons: [
+          {"src": iconUrl, "sizes":"192x192", "type":"image/svg+xml", "purpose":"any maskable"},
+          {"src": iconUrl, "sizes":"512x512", "type":"image/svg+xml", "purpose":"any maskable"}
+        ]
+      };
+      const manifestBlob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
+      const manifestURL = URL.createObjectURL(manifestBlob);
+      const link = document.createElement('link'); link.rel='manifest'; link.href=manifestURL; document.head.appendChild(link);
+
+      // Service worker (cache-then-network for this single file)
+      const swCode = `
+        const CACHE_NAME='treaty-pwa-v1';
+        self.addEventListener('install',e=>{
+          e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(['./'])));
+          self.skipWaiting();
+        });
+        self.addEventListener('activate',e=>{e.waitUntil(self.clients.claim())});
+        self.addEventListener('fetch',e=>{
+          const req=e.request;
+          if(req.method!=='GET') return;
+          e.respondWith(
+            caches.match(req).then(cached=>{
+              const fetchP=fetch(req).then(res=>{
+                const copy=res.clone();
+                caches.open(CACHE_NAME).then(c=>c.put(req, copy)).catch(()=>{});
+                return res;
+              }).catch(()=>cached);
+              return cached || fetchP;
+            })
+          );
+        });`;
+      if('serviceWorker' in navigator){
+        const blob = new Blob([swCode], {type:'text/javascript'});
+        const swURL = URL.createObjectURL(blob);
+        navigator.serviceWorker.register(swURL).catch(()=>{});
+      }
+    })();
+
+    // ===== Init =====
+    (function init(){
+      const st=load(); save(st.data, st.window);
+      setupChallengeAccordion();
+      updateFabPadding();
+      render();
+    })();
+  </script>
+</body>
+</html>
