@@ -241,7 +241,10 @@
 
     const $ = s => document.querySelector(s);
     const $$ = s => Array.from(document.querySelectorAll(s));
-    const todayStr = (d=new Date()) => new Date(d.getFullYear(),d.getMonth(),d.getDate()).toISOString().slice(0,10);
+    const todayStr = (d=new Date()) =>
+      new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+        .toISOString()
+        .slice(0,10);
 
     function load(){
       let rows=[],prefs={window:30};
