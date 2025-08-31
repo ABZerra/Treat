@@ -14,7 +14,7 @@
     :root{
       --bg:#FAFAF5;--panel:#FFFFFF;--ink:#2E2E2E;--muted:#838383;--line:#EAEAEA;
       --teal:#A7E0DC;--mint:#CDECC7;--amber:#FFE3A1;--coral:#FFB3AB;--gray:#D8D8D8;--chip:#F3F3F3;
-      --meter-a:#CDECC7;--meter-b:#BEE58C;--target:#FFD8C2;
+      --meter-a:#CDECC7;--meter-b:#BEE58C;--target:#FFC107;
       --r-lg:16px;--shadow:0 10px 30px rgba(0,0,0,.08);
       --fab-h:96px;
     }
@@ -38,7 +38,7 @@
     .meter-card{background:var(--panel);border-radius:var(--r-lg);box-shadow:var(--shadow);padding:16px;display:flex;gap:16px;align-items:flex-start}
     .meter{position:relative;width:56px;height:clamp(260px,52vh,360px);border-radius:999px;background:#F2F2F2;overflow:hidden}
     .meter .fill{position:absolute;bottom:0;left:0;right:0;height:50%;background:linear-gradient(180deg,var(--meter-b),var(--meter-a));transition:height .25s ease}
-    .meter .marker{position:absolute;left:-6px;right:-6px;height:0;border-top:2px dashed var(--target)}
+    .meter .marker{position:absolute;left:-6px;right:-6px;height:0;border-top:4px solid var(--target)}
 
     .side{flex:1;display:flex;flex-direction:column;gap:10px}
     .pct{font-size:2.4rem;font-weight:900;align-self:flex-start;margin-top:0}
@@ -360,7 +360,7 @@
       $$('#daysToggle .seg').forEach(b=> b.classList.toggle('active', Number(b.dataset.win)===st.window));
 
       // Target marker (80%)
-      const marker=$('#meterMarker'); if(marker){ marker.style.bottom = (100-80)+'%'; }
+      const marker=$('#meterMarker'); if(marker){ marker.style.bottom = '80%'; }
 
       // Challenge UI
       const chal=chalCalc(chalLoad());
