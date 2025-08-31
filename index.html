@@ -272,11 +272,11 @@
         const d=new Date(start);d.setDate(start.getDate()+i);
         const ds=d.toISOString().slice(0,10);
         const pts=byDate.get(ds)||0;
+        debt=Math.max(0,debt-1);
         if(pts>0){debt+=pts;rows.push({date:ds,n:pts});}
-        else if(debt>0){debt-=1;}
       }
       const allowed=Math.floor(0.2*windowDays);
-      const healthyPct=Math.round(((windowDays-Math.min(windowDays,debt))/windowDays)*100);
+      const healthyPct=Math.round(100-(Math.min(windowDays,debt)/windowDays)*100);
       let recovery=null;
       if(debt>allowed){
         const rec=new Date(end);rec.setDate(end.getDate()+(debt-allowed));
