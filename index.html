@@ -268,18 +268,20 @@
       const start=new Date(end);start.setDate(end.getDate()-(windowDays-1));
       const byDate=new Map(data.map(r=>[r.date,r.n]));
       let debt=0;const rows=[];
+      const dailyRec=windowDays/100;
       for(let i=0;i<windowDays;i++){
         const d=new Date(start);d.setDate(start.getDate()+i);
         const ds=d.toISOString().slice(0,10);
+        debt=Math.max(0,debt-dailyRec);
         const pts=byDate.get(ds)||0;
         if(pts>0){debt+=pts;rows.push({date:ds,n:pts});}
-        else if(debt>0){debt-=1;}
       }
       const allowed=Math.floor(0.2*windowDays);
-      const healthyPct=Math.round(((windowDays-Math.min(windowDays,debt))/windowDays)*100);
+      const healthyPct=Math.round(100-(Math.min(windowDays,debt)/windowDays)*100);
       let recovery=null;
       if(debt>allowed){
-        const rec=new Date(end);rec.setDate(end.getDate()+(debt-allowed));
+        const daysToAllowed=Math.ceil((debt-allowed)/dailyRec);
+        const rec=new Date(end);rec.setDate(end.getDate()+daysToAllowed);
         recovery=rec.toISOString().slice(0,10);
       }
       // streaks (current healthy run and best within window)
