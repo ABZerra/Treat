@@ -202,6 +202,7 @@
         </button>
         <h2 id="historyTitle" style="margin:0;font-size:1.1rem;font-weight:800">History</h2>
       </div>
+      <div id="todayScore" style="margin-bottom:10px;font-weight:800">Today: <span id="todayChip" class="chip neutral">+0</span></div>
       <div class="table">
         <table aria-describedby="historyTitle">
           <thead><tr><th>Date</th><th>Points</th><th>Actions</th></tr></thead>
@@ -387,6 +388,14 @@
         const sText=(chal.phase==='complete' ? (chal.onTrack?'Completed: success':'Completed: failed') : `In progress • ${chal.left} left`);
         if(statusEl) statusEl.textContent=sText;
         if(headerStatus) headerStatus.textContent=sText;
+      }
+
+      // Today's score on history page
+      const todayPts = st.data.find(r => r.date === todayStr())?.n || 0;
+      const todayChip = $('#todayChip');
+      if(todayChip){
+        todayChip.textContent = '+' + todayPts;
+        todayChip.className = 'chip ' + (todayPts >= 3 ? 'coral' : todayPts === 2 ? 'amber' : todayPts === 1 ? 'mint' : 'neutral');
       }
 
       // History list (in-window)
