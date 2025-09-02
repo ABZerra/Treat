@@ -318,28 +318,40 @@
     }
 
     // ===== Mutations =====
-    function setWindow(n){ const st=load(); save(st.data, Number(n)); render(); }
+    function setWindow(n){
+      const st=load();
+      const win=Number(n);
+      save(st.data, win);
+      render(st.data, win);
+    }
 
     function addPoints(ds, delta){
       const st=load(); const map=new Map(st.data.map(r=>[r.date,r.n]));
       const cur=map.get(ds)||0; const next=Math.max(0,cur+delta);
       if(next===0) map.delete(ds); else map.set(ds,next);
       const out=[...map.entries()].map(([date,n])=>({date,n}));
-      save(out, st.window); render();
+      save(out, st.window);
+      render(out, st.window);
       notify((delta>=0?'+':'')+delta+' on '+ds);
     }
     function setPoints(ds, n){
       const st=load(); const map=new Map(st.data.map(r=>[r.date,r.n]));
       const prev=map.get(ds)||0; if(n<=0) map.delete(ds); else map.set(ds,n);
       const out=[...map.entries()].map(([date,n])=>({date,n}));
-      save(out, st.window); render();
+      save(out, st.window);
+      render(out, st.window);
       const delta = n - prev;
       notify((delta>=0?'Set ':'Set ')+ds+' to '+(n>0?('+'+n):'0'));
     }
 
     // ===== Rendering =====
-    function render(){
-      const st=load(); const s=stats(st.data, st.window);
+    function render(data, windowDays){
+      if(data === undefined || windowDays === undefined){
+        const st=load();
+        if(data === undefined) data=st.data;
+        if(windowDays === undefined) windowDays=st.window;
+      }
+      const s=stats(data, windowDays);
 
       // Meter + headline + pills
       $('#meterFill').style.height=Math.max(0,Math.min(100,s.healthyPct))+'%';
@@ -347,7 +359,7 @@
       $('#pillAllowed').textContent='Allowed: '+s.allowed+' pts';
       $('#pillDebt').textContent='Used: '+s.debt+' pts';
       $('#pillLeft').textContent='Left: '+Math.max(0,s.allowed-s.debt)+' pts';
-      $('#windowHelp').textContent='Recalculates last '+st.window+' days';
+      $('#windowHelp').textContent='Recalculates last '+windowDays+' days';
 
       // Vertical legend
       const rec=$('#kpiRecovery'); if(rec) rec.textContent = s.recovery || '—';
@@ -360,7 +372,7 @@
       const pl=document.querySelector('#spark polyline'); if(pl) pl.setAttribute('points', coords);
 
       // Toggle state
-      $$('#daysToggle .seg').forEach(b=> b.classList.toggle('active', Number(b.dataset.win)===st.window));
+      $$('#daysToggle .seg').forEach(b=> b.classList.toggle('active', Number(b.dataset.win)===windowDays));
 
       // Target marker (80%)
       const marker=$('#meterMarker'); if(marker){ marker.style.bottom = '80%'; }
@@ -551,7 +563,7 @@
       const st=load(); save(st.data, st.window);
       setupChallengeAccordion();
       updateFabPadding();
-      render();
+      render(st.data, st.window);
     })();
   </script>
 </body>
