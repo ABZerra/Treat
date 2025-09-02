@@ -275,8 +275,14 @@
         const d=new Date(start);d.setDate(start.getDate()+i);
         const ds=d.toISOString().slice(0,10);
         const pts=byDate.get(ds)||0;
+        const recovered=debt>0; // recover 1 at start of day if in debt
         debt=Math.max(0,debt-1);
-        if(pts>0){debt+=pts;rows.push({date:ds,n:pts});}
+        if(pts>0){
+          debt+=pts;
+          rows.push({date:ds,n:pts});
+        } else if(recovered){
+          rows.push({date:ds,n:-1});
+        }
       }
       const allowed=Math.floor(0.2*windowDays);
       const healthyPct=Math.round(100-(Math.min(windowDays,debt)/windowDays)*100);
@@ -365,8 +371,8 @@
       const rec=$('#kpiRecovery'); if(rec) rec.textContent = s.recovery || '—';
       const strk=$('#kpiStreaks'); if(strk) strk.textContent = s.cur+' / '+s.best;
 
-      // Sparkline (last 7 in-window entries)
-      const last7=s.rows.slice(-7);
+      // Sparkline (last 7 in-window positive entries)
+      const last7=s.rows.filter(r=>r.n>0).slice(-7);
       const max=Math.max(1, ...last7.map(r=>r.n), 3);
       const coords=last7.map((r,i)=>{const x=(i/(Math.max(1,last7.length-1)))*100;const y=30-(r.n/max)*28;return x.toFixed(1)+','+y.toFixed(1)}).join(' ');
       const pl=document.querySelector('#spark polyline'); if(pl) pl.setAttribute('points', coords);
@@ -413,7 +419,11 @@
           rows.forEach(r=>{
             const tr=document.createElement('tr');
             const td1=document.createElement('td'); td1.textContent=r.date; tr.appendChild(td1);
-            const td2=document.createElement('td'); const chip=document.createElement('span'); chip.className='chip '+(r.n>=3?'coral': r.n===2?'amber': r.n===1?'mint':'neutral'); chip.textContent='+'+r.n; td2.appendChild(chip); tr.appendChild(td2);
+            const td2=document.createElement('td'); const chip=document.createElement('span');
+            const cls = (r.n>=3?'coral': r.n===2?'amber': (r.n===1||r.n===-1)?'mint':'neutral');
+            chip.className='chip '+cls;
+            chip.textContent = r.n>0 ? ('+'+r.n) : r.n;
+            td2.appendChild(chip); tr.appendChild(td2);
             const td3=document.createElement('td'); const acts=document.createElement('div'); acts.className='row-actions';
             ['+1','+2','+3','−1','Reset'].forEach(lbl=>{
               const b=document.createElement('button'); b.className='btn ghost xs'; b.textContent=lbl;
