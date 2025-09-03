@@ -271,9 +271,9 @@
       const start=new Date(end);start.setDate(end.getDate()-(windowDays-1));
       const byDate=new Map(data.map(r=>[r.date,r.n]));
       let debt=0;const rows=[];
-      for(let i=0;i<windowDays;i++){
-        const d=new Date(start);d.setDate(start.getDate()+i);
-        const ds=d.toISOString().slice(0,10);
+        for(let i=0;i<windowDays;i++){
+          const d=new Date(start);d.setDate(start.getDate()+i);
+          const ds=todayStr(d);
         const pts=byDate.get(ds)||0;
         const recovered=debt>0; // recover 1 at start of day if in debt
         debt=Math.max(0,debt-1);
@@ -287,15 +287,15 @@
       const allowed=Math.floor(0.2*windowDays);
       const healthyPct=Math.round(100-(Math.min(windowDays,debt)/windowDays)*100);
       let recovery=null;
-      if(debt>allowed){
-        const rec=new Date(end);rec.setDate(end.getDate()+(debt-allowed));
-        recovery=rec.toISOString().slice(0,10);
+        if(debt>allowed){
+          const rec=new Date(end);rec.setDate(end.getDate()+(debt-allowed));
+          recovery=todayStr(rec);
       }
       // streaks (current healthy run and best within window)
       let cur=0,best=0,tmp=0;
-      for(let i=0;i<windowDays;i++){
-        const d=new Date(end);d.setDate(end.getDate()-i);
-        const ds=d.toISOString().slice(0,10);
+        for(let i=0;i<windowDays;i++){
+          const d=new Date(end);d.setDate(end.getDate()-i);
+          const ds=todayStr(d);
         if((byDate.get(ds)||0)>0){best=Math.max(best,tmp); if(i===0)cur=0; tmp=0;}
         else {tmp++; if(i===0)cur=1;}
       }
