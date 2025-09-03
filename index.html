@@ -277,11 +277,12 @@
         const pts=byDate.get(ds)||0;
         const recovered=debt>0; // recover 1 at start of day if in debt
         debt=Math.max(0,debt-1);
+        if(recovered){
+          rows.push({date:ds,n:-1});
+        }
         if(pts>0){
           debt+=pts;
           rows.push({date:ds,n:pts});
-        } else if(recovered){
-          rows.push({date:ds,n:-1});
         }
       }
       const allowed=Math.floor(0.2*windowDays);
