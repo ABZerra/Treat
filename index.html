@@ -9,8 +9,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="theme-color" content="#A7E0DC" />
-  <link id="favicon" rel="icon" type="image/png" />
-  <link id="apple-touch" rel="apple-touch-icon" />
+  <link id="favicon" rel="icon" type="image/png" href="data:image/png;base64,">
+  <link id="apple-touch" rel="apple-touch-icon" href="data:image/png;base64,">
   <link rel="manifest" href="manifest.webmanifest" />
 
   <style>
@@ -34,6 +34,7 @@
 
     .brand{display:flex;align-items:center;gap:12px}
     .brand h1{margin:0;font-size:1.6rem;font-weight:900;letter-spacing:.2px}
+    .header{margin-bottom:10px}
     .cat{width:56px;height:56px;border-radius:14px;overflow:hidden;box-shadow:var(--shadow);border:1px solid #E9DED3}
     .cat img{width:100%;height:100%;object-fit:cover}
 
@@ -81,7 +82,7 @@
     /* History */
     .screen{display:none}.screen.active{display:block}
     .toolbar{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-    .home-btn{width:36px;height:36px;border:0;padding:0;background:none}
+    .home-btn{border:0;padding:0;background:none}
     .home-btn img{width:100%;height:100%;display:block}
     .table{background:var(--panel);border-radius:var(--r-lg);box-shadow:var(--shadow);overflow:hidden}
     table{width:100%;border-collapse:collapse}
@@ -207,11 +208,11 @@
 
     <!-- HISTORY -->
     <section id="history" class="screen" aria-labelledby="historyTitle">
-      <div class="toolbar">
-        <button class="home-btn" id="backHome" aria-label="Back to Home">
-          <img alt="Home" />
+      <div class="toolbar brand">
+        <button class="home-btn cat" id="backHome" aria-label="Back to Home">
+          <img alt="Treaty cat logo" />
         </button>
-        <h2 id="historyTitle" style="margin:0;font-size:1.1rem;font-weight:800">History</h2>
+        <h1 id="historyTitle">History</h1>
       </div>
       <div class="table">
         <table aria-describedby="historyTitle">
@@ -233,11 +234,11 @@
 
     <!-- HABITS -->
     <section id="habits" class="screen" aria-labelledby="habitsTitle">
-      <div class="toolbar">
-        <button class="home-btn" id="backHomeFromHabits" aria-label="Back to Home">
-          <img alt="Home" />
+      <div class="toolbar brand">
+        <button class="home-btn cat" id="backHomeFromHabits" aria-label="Back to Home">
+          <img alt="Treaty cat logo" />
         </button>
-        <h2 id="habitsTitle" style="margin:0;font-size:1.1rem;font-weight:800">Habits</h2>
+        <h1 id="habitsTitle">Habits</h1>
       </div>
       <div class="habit-list" id="habitList"></div>
       <div class="edit-card">
@@ -253,10 +254,10 @@
 
   <script type="module">
     import { CAT_ICON } from './icons/cat-icon.js';
-    document.getElementById('favicon').href = CAT_ICON;
-    document.getElementById('apple-touch').href = CAT_ICON;
     document.getElementById('logo').src = CAT_ICON;
     document.querySelectorAll('.home-btn img').forEach(img => img.src = CAT_ICON);
+    document.getElementById('favicon').href = CAT_ICON;
+    document.getElementById('apple-touch').href = CAT_ICON;
 
     // ===== Keys (v1) =====
     const KEY='mvp_points_v1';
