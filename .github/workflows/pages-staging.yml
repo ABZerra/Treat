@@ -1,8 +1,8 @@
-name: Deploy site to GitHub Pages
+name: Deploy staging to GitHub Pages
 
 on:
   push:
-    branches: ["main"]
+    branches: ["staging"]
   workflow_dispatch:
 
 permissions:
@@ -11,13 +11,13 @@ permissions:
   id-token: write
 
 concurrency:
-  group: "pages"
+  group: "pages-staging"
   cancel-in-progress: false
 
 jobs:
   deploy:
     environment:
-      name: production
+      name: staging
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
