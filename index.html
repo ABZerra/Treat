@@ -93,6 +93,11 @@
     .form{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
     input[type="date"],select.window{appearance:none;border:1px solid var(--gray);border-radius:999px;padding:10px 12px;background:#fff;color:var(--ink)}
 
+    /* Habits */
+    .habit-list{display:flex;flex-direction:column;gap:6px}
+    .habit-row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+    .habit-row.completed .name{text-decoration:line-through;color:var(--muted)}
+
     .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(88px + env(safe-area-inset-bottom));background:#ffffff;border:1px solid #E7F1F0;box-shadow:var(--shadow);padding:10px 12px;border-radius:12px;font-weight:700;color:var(--ink);display:none;z-index:50}
 
     /* Accordion bits */
@@ -180,7 +185,10 @@
 
       <div class="footer">
         <div>30d rolling = core. Data stored locally.</div>
-        <div class="link" id="toHistory">View History</div>
+        <div style="display:flex;gap:8px;">
+          <div class="link" id="toHistory">View History</div>
+          <div class="link" id="toHabits">Habits</div>
+        </div>
       </div>
       <div aria-hidden="true" style="height:16px"></div>
       <div class="fab">
@@ -216,6 +224,24 @@
           <button class="btn amber" id="mark2">+2</button>
           <button class="btn coral" id="mark3">+3</button>
           <button class="btn ghost" id="mark0">Reset</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- HABITS -->
+    <section id="habits" class="screen" aria-labelledby="habitsTitle">
+      <div class="toolbar">
+        <button class="back" id="backHomeFromHabits" aria-label="Back to Home">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <h2 id="habitsTitle" style="margin:0;font-size:1.1rem;font-weight:800">Habits</h2>
+      </div>
+      <div class="habit-list" id="habitList"></div>
+      <div class="edit-card">
+        <h3 style="margin:0 0 8px;font-size:1rem;font-weight:800;color:var(--ink)">Add Habit</h3>
+        <div class="form">
+          <input type="text" id="newHabitName" placeholder="Name" />
+          <button class="btn mint" id="addHabit">Add</button>
         </div>
       </div>
     </section>
@@ -444,7 +470,64 @@
       const dp=$('#datePicker'); if(dp && !dp.value) dp.value=todayStr();
     }
 
-    // ===== Events =====
+      // ===== Habits =====
+      const HABITS_KEY='treat_habits_v1';
+      function loadHabits(){ try{return JSON.parse(localStorage.getItem(HABITS_KEY)||'[]')}catch(e){return[]} }
+      function saveHabits(list){ localStorage.setItem(HABITS_KEY, JSON.stringify(list)); }
+      function renderHabits(){
+        const list=loadHabits();
+        const wrap=$('#habitList'); if(!wrap) return;
+        const today=todayStr();
+        wrap.innerHTML='';
+        list.forEach(h=>{
+          const row=document.createElement('div');
+          row.className='habit-row'+(h.lastCompleted===today?' completed':'');
+          row.dataset.id=h.id;
+          const label=document.createElement('label');
+          label.style.display='flex'; label.style.alignItems='center'; label.style.gap='8px';
+          const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=(h.lastCompleted===today);
+          cb.addEventListener('change', ()=>toggleHabit(h.id));
+          const span=document.createElement('span'); span.className='name'; span.textContent=h.name;
+          label.appendChild(cb); label.appendChild(span);
+          row.appendChild(label);
+          const acts=document.createElement('div'); acts.className='row-actions';
+          const edit=document.createElement('button'); edit.className='btn ghost xs'; edit.textContent='Edit';
+          edit.addEventListener('click', ()=>editHabit(h.id));
+          const del=document.createElement('button'); del.className='btn ghost xs'; del.textContent='Delete';
+          del.addEventListener('click', ()=>deleteHabit(h.id));
+          acts.appendChild(edit); acts.appendChild(del);
+          row.appendChild(acts);
+          wrap.appendChild(row);
+        });
+      }
+      function addHabit(name){
+        const list=loadHabits();
+        list.push({id:Date.now().toString(),name,lastCompleted:null});
+        saveHabits(list);
+        renderHabits();
+      }
+      function editHabit(id){
+        const list=loadHabits();
+        const h=list.find(x=>x.id===id); if(!h) return;
+        const name=prompt('Edit habit name', h.name);
+        if(name){ h.name=name; saveHabits(list); renderHabits(); }
+      }
+      function deleteHabit(id){
+        let list=loadHabits();
+        list=list.filter(h=>h.id!==id);
+        saveHabits(list);
+        renderHabits();
+      }
+      function toggleHabit(id){
+        const list=loadHabits();
+        const h=list.find(x=>x.id===id); if(!h) return;
+        const today=todayStr();
+        h.lastCompleted = (h.lastCompleted===today) ? null : today;
+        saveHabits(list);
+        renderHabits();
+      }
+
+      // ===== Events =====
     // FAB quick-add (today)
     $('#add1').addEventListener('click', ()=>addPoints(todayStr(),1));
     $('#add2').addEventListener('click', ()=>addPoints(todayStr(),2));
@@ -456,13 +539,29 @@
       $$('.screen').forEach(s=>s.classList.remove('active'));
       $('#history').classList.add('active');
     });
-    $('#backHome').addEventListener('click', ()=>{
-      $$('.screen').forEach(s=>s.classList.remove('active'));
-      $('#home').classList.add('active');
-    });
+      $('#backHome').addEventListener('click', ()=>{
+        $$('.screen').forEach(s=>s.classList.remove('active'));
+        $('#home').classList.add('active');
+      });
+      $('#toHabits').addEventListener('click', ()=>{
+        $$('.screen').forEach(s=>s.classList.remove('active'));
+        $('#habits').classList.add('active');
+        renderHabits();
+      });
+      $('#backHomeFromHabits').addEventListener('click', ()=>{
+        $$('.screen').forEach(s=>s.classList.remove('active'));
+        $('#home').classList.add('active');
+      });
+      $('#addHabit').addEventListener('click', ()=>{
+        const name=$('#newHabitName').value.trim();
+        if(name){
+          addHabit(name);
+          $('#newHabitName').value='';
+        }
+      });
 
-    // Window toggle
-    $$('#daysToggle .seg').forEach(b=> b.addEventListener('click', ()=> setWindow(b.dataset.win)) );
+      // Window toggle
+      $$('#daysToggle .seg').forEach(b=> b.addEventListener('click', ()=> setWindow(b.dataset.win)) );
 
     // History date editor
     const getPickedDate = ()=> ($('#datePicker').value || todayStr());
@@ -574,6 +673,7 @@
       const st=load(); save(st.data, st.window);
       setupChallengeAccordion();
       updateFabPadding();
+      renderHabits();
       render(st.data, st.window);
     })();
   </script>
