@@ -187,11 +187,20 @@
         </div>
       </div>
 
+      <h2 style="margin:16px 0 8px;font-size:1.2rem;font-weight:800">Habits</h2>
+      <div class="habit-list" id="habitList"></div>
+      <div class="edit-card">
+        <h3 style="margin:0 0 8px;font-size:1rem;font-weight:800;color:var(--ink)">Add Habit</h3>
+        <div class="form">
+          <input type="text" id="newHabitName" placeholder="Name" />
+          <button class="btn mint" id="addHabit">Add</button>
+        </div>
+      </div>
+
       <div class="footer">
         <div>30d rolling = core. Data stored locally.</div>
         <div style="display:flex;gap:8px;">
           <div class="link" id="toHistory">View History</div>
-          <div class="link" id="toHabits">Habits</div>
         </div>
       </div>
       <div aria-hidden="true" style="height:16px"></div>
@@ -228,24 +237,6 @@
           <button class="btn amber" id="mark2">+2</button>
           <button class="btn coral" id="mark3">+3</button>
           <button class="btn ghost" id="mark0">Reset</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- HABITS -->
-    <section id="habits" class="screen" aria-labelledby="habitsTitle">
-      <div class="toolbar brand">
-        <button class="home-btn cat" id="backHomeFromHabits" aria-label="Back to Home">
-          <img alt="Treaty cat logo" />
-        </button>
-        <h1 id="habitsTitle">Habits</h1>
-      </div>
-      <div class="habit-list" id="habitList"></div>
-      <div class="edit-card">
-        <h3 style="margin:0 0 8px;font-size:1rem;font-weight:800;color:var(--ink)">Add Habit</h3>
-        <div class="form">
-          <input type="text" id="newHabitName" placeholder="Name" />
-          <button class="btn mint" id="addHabit">Add</button>
         </div>
       </div>
     </section>
@@ -548,15 +539,6 @@
       $('#history').classList.add('active');
     });
       $('#backHome').addEventListener('click', ()=>{
-        $$('.screen').forEach(s=>s.classList.remove('active'));
-        $('#home').classList.add('active');
-      });
-      $('#toHabits').addEventListener('click', ()=>{
-        $$('.screen').forEach(s=>s.classList.remove('active'));
-        $('#habits').classList.add('active');
-        renderHabits();
-      });
-      $('#backHomeFromHabits').addEventListener('click', ()=>{
         $$('.screen').forEach(s=>s.classList.remove('active'));
         $('#home').classList.add('active');
       });
