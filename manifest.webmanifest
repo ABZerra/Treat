@@ -5,5 +5,12 @@
   "scope": "./",
   "display": "standalone",
   "background_color": "#FAFAF5",
-  "theme_color": "#A7E0DC"
+  "theme_color": "#A7E0DC",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMDAgMTAwJz48dGV4dCB5PScuOWVtJyBmb250LXNpemU9JzkwJz7wn5CIPC90ZXh0Pjwvc3ZnPg==",
+      "sizes": "100x100",
+      "type": "image/svg+xml"
+    }
+  ]
 }
