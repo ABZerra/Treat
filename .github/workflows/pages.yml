@@ -18,6 +18,7 @@ concurrency:
 jobs:
   deploy-staging:
     environment:
+codex/create-prd-for-habit-tracker-feature
       name: staging
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
@@ -37,6 +38,7 @@ jobs:
   deploy-production:
     needs: deploy-staging
     environment:
+main
       name: production
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
