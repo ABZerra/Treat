@@ -15,9 +15,28 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  deploy-staging:
     environment:
-      name: github-pages
+      name: staging
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Upload site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  deploy-production:
+    needs: deploy-staging
+    environment:
+      name: production
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
