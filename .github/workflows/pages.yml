@@ -1,4 +1,5 @@
 name: Deploy site to GitHub Pages
+# Deploy to staging before production
 
 on:
   push:
