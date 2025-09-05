@@ -10,6 +10,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="theme-color" content="#A7E0DC" />
   <link id="favicon" rel="icon" type="image/png" />
+  <link id="apple-touch" rel="apple-touch-icon" />
   <link rel="manifest" href="manifest.webmanifest" />
 
   <style>
@@ -253,6 +254,7 @@
   <script type="module">
     import { CAT_ICON } from './icons/cat-icon.js';
     document.getElementById('favicon').href = CAT_ICON;
+    document.getElementById('apple-touch').href = CAT_ICON;
     document.getElementById('logo').src = CAT_ICON;
     document.querySelectorAll('.home-btn img').forEach(img => img.src = CAT_ICON);
 
