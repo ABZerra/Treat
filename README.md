@@ -2,6 +2,10 @@
 
 Repo for Treat app.
 
+## Customization
+
+The app includes a Settings page where you can change small, medium, and large cheat values as well as the daily recovery amount. The recovery cycle remains daily and the 80% health threshold is fixed. Recovery changes apply only to future days and do not alter past records.
+
 ## Preview
 
 This repository includes GitHub Pages workflows to publish the site.
