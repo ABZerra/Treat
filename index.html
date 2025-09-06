@@ -201,6 +201,7 @@
         <div>30d rolling = core. Data stored locally.</div>
         <div style="display:flex;gap:8px;">
           <div class="link" id="toHistory">View History</div>
+          <div class="link" id="toSettings">Settings</div>
         </div>
       </div>
       <div aria-hidden="true" style="height:16px"></div>
@@ -239,6 +240,33 @@
           <button class="btn ghost" id="mark0">Reset</button>
         </div>
       </div>
+      </section>
+
+    <!-- SETTINGS -->
+    <section id="settings" class="screen" aria-labelledby="settingsTitle">
+      <div class="toolbar brand">
+        <button class="home-btn cat" id="backHome2" aria-label="Back to Home">
+          <img alt="Treaty cat logo" />
+        </button>
+        <h1 id="settingsTitle">Settings</h1>
+      </div>
+      <div class="edit-card">
+        <h3 style="margin:0 0 8px;font-size:1rem;font-weight:800;color:var(--ink)">Cheat Values</h3>
+        <div class="form">
+          <label>Small <input type="number" id="valSmall" min="1" style="width:60px"></label>
+          <label>Medium <input type="number" id="valMedium" min="1" style="width:60px"></label>
+          <label>Large <input type="number" id="valLarge" min="1" style="width:60px"></label>
+        </div>
+      </div>
+      <div class="edit-card">
+        <h3 style="margin:0 0 8px;font-size:1rem;font-weight:800;color:var(--ink)">Recovery</h3>
+        <div class="form">
+          <label>Daily amount <input type="number" id="valRecovery" min="0" style="width:80px"></label>
+        </div>
+      </div>
+      <div class="edit-card">
+        <button class="btn mint" id="saveSettings">Save</button>
+      </div>
     </section>
 
   </div>
@@ -249,10 +277,26 @@
     document.querySelectorAll('.home-btn img').forEach(img => img.src = CAT_ICON);
 
     // ===== Keys (v1) =====
-    const KEY='mvp_points_v1';
-    const PREF_KEY='mvp_prefs_v1';
-    const CHAL_KEY='mvp_chal_v1';
-    const CHAL_COLLAPSE_KEY='mvp_chal_collapsed_v1';
+      const KEY='mvp_points_v1';
+      const PREF_KEY='mvp_prefs_v1';
+      const CHAL_KEY='mvp_chal_v1';
+      const CHAL_COLLAPSE_KEY='mvp_chal_collapsed_v1';
+      const REC_KEY='mvp_recovery_hist_v1';
+
+      let PREFS={window:30,small:1,medium:2,large:3,recovery:1};
+      let REC_HIST=[];
+      function savePrefs(){ localStorage.setItem(PREF_KEY, JSON.stringify(PREFS)); }
+      function saveRecHist(){ localStorage.setItem(REC_KEY, JSON.stringify(REC_HIST)); }
+
+      function loadRecHist(){
+        try{REC_HIST=JSON.parse(localStorage.getItem(REC_KEY)||'[]')}catch(e){REC_HIST=[]}
+        if(!Array.isArray(REC_HIST) || REC_HIST.length===0){
+          REC_HIST=[{date:'1970-01-01',value:PREFS.recovery}];
+          saveRecHist();
+        } else {
+          REC_HIST.sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+        }
+      }
 
     // Migrate older keys if present
     (function migrate(){
@@ -271,53 +315,59 @@
         .toISOString()
         .slice(0,10);
 
-    function load(){
-      let rows=[],prefs={window:30};
-      try{rows=JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){}
-      try{prefs=Object.assign({window:30},JSON.parse(localStorage.getItem(PREF_KEY)||'{}'))}catch(e){}
-      const map=new Map();
+      function load(){
+        let rows=[];
+        try{rows=JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){}
+        try{PREFS=Object.assign({window:30,small:1,medium:2,large:3,recovery:1},JSON.parse(localStorage.getItem(PREF_KEY)||'{}'))}catch(e){}
+        loadRecHist();
+        const map=new Map();
       for(const r of rows){
         const ds=String(r.date||r).slice(0,10);
         const n=Math.max(0,Number(r.n||1));
         map.set(ds,(map.get(ds)||0)+n);
       }
-      const data=[...map.entries()].map(([date,n])=>({date,n})).sort((a,b)=>a.date.localeCompare(b.date));
-      return {data,window:Number(prefs.window)||30};
-    }
-    function save(data,window){
-      const clean=data.filter(r=>r.n>0).sort((a,b)=>a.date.localeCompare(b.date));
-      localStorage.setItem(KEY,JSON.stringify(clean));
-      localStorage.setItem(PREF_KEY,JSON.stringify({window:Number(window)||30}));
-    }
+        const data=[...map.entries()].map(([date,n])=>({date,n})).sort((a,b)=>a.date.localeCompare(b.date));
+        return {data,window:Number(PREFS.window)||30};
+      }
+      function save(data,window){
+        const clean=data.filter(r=>r.n>0).sort((a,b)=>a.date.localeCompare(b.date));
+        localStorage.setItem(KEY,JSON.stringify(clean));
+        PREFS.window=Number(window)||30;
+        savePrefs();
+      }
 
-    // ===== Core rolling-window stats (20% budget, 1/day decay) =====
-    function stats(data,windowDays){
-      const end=new Date();end.setHours(0,0,0,0);
-      const start=new Date(end);start.setDate(end.getDate()-(windowDays-1));
-      const byDate=new Map(data.map(r=>[r.date,r.n]));
-      let debt=0;const rows=[];
+      function recoveryOn(ds){
+        let val=PREFS.recovery;
+        for(const rec of REC_HIST){
+          if(rec.date<=ds) val=Number(rec.value)||0; else break;
+        }
+        return val;
+      }
+
+      // ===== Core rolling-window stats (20% budget, daily decay) =====
+      function stats(data,windowDays){
+        const end=new Date();end.setHours(0,0,0,0);
+        const start=new Date(end);start.setDate(end.getDate()-(windowDays-1));
+        const byDate=new Map(data.map(r=>[r.date,r.n]));
+        let debt=0;const rows=[];
         for(let i=0;i<windowDays;i++){
           const d=new Date(start);d.setDate(start.getDate()+i);
           const ds=todayStr(d);
-        const pts=byDate.get(ds)||0;
-        const recovered=debt>0; // recover 1 at start of day if in debt
-        debt=Math.max(0,debt-1);
-        if(recovered){
-          rows.push({date:ds,n:-1});
+          const pts=byDate.get(ds)||0;
+          const recVal=recoveryOn(ds);
+          const recovered=Math.min(debt,recVal);
+          if(recovered>0){ debt-=recovered; rows.push({date:ds,n:-recovered}); }
+          if(pts>0){ debt+=pts; rows.push({date:ds,n:pts}); }
         }
-        if(pts>0){
-          debt+=pts;
-          rows.push({date:ds,n:pts});
-        }
-      }
-      const allowed=Math.floor(0.2*windowDays);
-      const healthyPct=Math.round(100-(Math.min(windowDays,debt)/windowDays)*100);
-      let recovery=null;
-        if(debt>allowed){
-          const rec=new Date(end);rec.setDate(end.getDate()+(debt-allowed));
+        const allowed=Math.floor(0.2*windowDays);
+        const healthyPct=Math.round(100-(Math.min(windowDays,debt)/windowDays)*100);
+        const recToday=recoveryOn(todayStr());
+        let recovery=null;
+        if(debt>allowed && recToday>0){
+          const rec=new Date(end);rec.setDate(end.getDate()+Math.ceil((debt-allowed)/recToday));
           recovery=todayStr(rec);
-      }
-      // streaks (current healthy run and best within window)
+        }
+        // streaks (current healthy run and best within window)
       let cur=0,best=0,tmp=0;
         for(let i=0;i<windowDays;i++){
           const d=new Date(end);d.setDate(end.getDate()-i);
@@ -377,13 +427,21 @@
     }
 
     // ===== Rendering =====
-    function render(data, windowDays){
-      if(data === undefined || windowDays === undefined){
-        const st=load();
-        if(data === undefined) data=st.data;
-        if(windowDays === undefined) windowDays=st.window;
-      }
-      const s=stats(data, windowDays);
+      function render(data, windowDays){
+        if(data === undefined || windowDays === undefined){
+          const st=load();
+          if(data === undefined) data=st.data;
+          if(windowDays === undefined) windowDays=st.window;
+        }
+        const s=stats(data, windowDays);
+
+        // Update button labels based on preferences
+        const a1=$('#add1'); if(a1) a1.textContent=`Small (+${PREFS.small})`;
+        const a2=$('#add2'); if(a2) a2.textContent=`Medium (+${PREFS.medium})`;
+        const a3=$('#add3'); if(a3) a3.textContent=`Large (+${PREFS.large})`;
+        const m1=$('#mark1'); if(m1) m1.textContent='+'+PREFS.small;
+        const m2=$('#mark2'); if(m2) m2.textContent='+'+PREFS.medium;
+        const m3=$('#mark3'); if(m3) m3.textContent='+'+PREFS.large;
 
       // Meter + headline + pills
       $('#meterFill').style.height=Math.max(0,Math.min(100,s.healthyPct))+'%';
@@ -434,36 +492,36 @@
       }
 
       // History list (in-window)
-      const body=$('#historyBody'); if(body){
-        body.innerHTML='';
-        const rows=s.rows.slice().reverse();
-        if(rows.length===0){
-          const tr=document.createElement('tr');
-          const td=document.createElement('td'); td.colSpan=3; td.style.color='var(--muted)'; td.textContent='No entries in this window.';
-          tr.appendChild(td); body.appendChild(tr);
-        } else {
-          rows.forEach(r=>{
+        const body=$('#historyBody'); if(body){
+          body.innerHTML='';
+          const rows=s.rows.slice().reverse();
+          if(rows.length===0){
             const tr=document.createElement('tr');
-            const td1=document.createElement('td'); td1.textContent=r.date; tr.appendChild(td1);
-            const td2=document.createElement('td'); const chip=document.createElement('span');
-            const cls = (r.n>=3?'coral': r.n===2?'amber': (r.n===1||r.n===-1)?'mint':'neutral');
-            chip.className='chip '+cls;
-            chip.textContent = r.n>0 ? ('+'+r.n) : r.n;
-            td2.appendChild(chip); tr.appendChild(td2);
-            const td3=document.createElement('td'); const acts=document.createElement('div'); acts.className='row-actions';
-            ['+1','+2','+3','−1','Reset'].forEach(lbl=>{
-              const b=document.createElement('button'); b.className='btn ghost xs'; b.textContent=lbl;
-              b.onclick=()=>{ if(lbl==='+1') addPoints(r.date,1);
-                              if(lbl==='+2') addPoints(r.date,2);
-                              if(lbl==='+3') addPoints(r.date,3);
-                              if(lbl==='−1') addPoints(r.date,-1);
-                              if(lbl==='Reset') setPoints(r.date,0); };
-              acts.appendChild(b);
+            const td=document.createElement('td'); td.colSpan=3; td.style.color='var(--muted)'; td.textContent='No entries in this window.';
+            tr.appendChild(td); body.appendChild(tr);
+          } else {
+            rows.forEach(r=>{
+              const tr=document.createElement('tr');
+              const td1=document.createElement('td'); td1.textContent=r.date; tr.appendChild(td1);
+              const td2=document.createElement('td'); const chip=document.createElement('span');
+              const cls = (r.n>=PREFS.large?'coral': r.n===PREFS.medium?'amber': (r.n===PREFS.small||r.n===-PREFS.small)?'mint':'neutral');
+              chip.className='chip '+cls;
+              chip.textContent = r.n>0 ? ('+'+r.n) : r.n;
+              td2.appendChild(chip); tr.appendChild(td2);
+              const td3=document.createElement('td'); const acts=document.createElement('div'); acts.className='row-actions';
+              [`+${PREFS.small}`,`+${PREFS.medium}`,`+${PREFS.large}`,`-${PREFS.small}`,'Reset'].forEach(lbl=>{
+                const b=document.createElement('button'); b.className='btn ghost xs'; b.textContent=lbl;
+                b.onclick=()=>{ if(lbl===`+${PREFS.small}`) addPoints(r.date,PREFS.small);
+                                if(lbl===`+${PREFS.medium}`) addPoints(r.date,PREFS.medium);
+                                if(lbl===`+${PREFS.large}`) addPoints(r.date,PREFS.large);
+                                if(lbl===`-${PREFS.small}`) addPoints(r.date,-PREFS.small);
+                                if(lbl==='Reset') setPoints(r.date,0); };
+                acts.appendChild(b);
+              });
+              td3.appendChild(acts); tr.appendChild(td3); body.appendChild(tr);
             });
-            td3.appendChild(acts); tr.appendChild(td3); body.appendChild(tr);
-          });
+          }
         }
-      }
 
       // Default date in editor
       const dp=$('#datePicker'); if(dp && !dp.value) dp.value=todayStr();
@@ -528,21 +586,33 @@
 
       // ===== Events =====
     // FAB quick-add (today)
-    $('#add1').addEventListener('click', ()=>addPoints(todayStr(),1));
-    $('#add2').addEventListener('click', ()=>addPoints(todayStr(),2));
-    $('#add3').addEventListener('click', ()=>addPoints(todayStr(),3));
-    $('#undo').addEventListener('click', ()=>addPoints(todayStr(),-1));
+      $('#add1').addEventListener('click', ()=>addPoints(todayStr(),PREFS.small));
+      $('#add2').addEventListener('click', ()=>addPoints(todayStr(),PREFS.medium));
+      $('#add3').addEventListener('click', ()=>addPoints(todayStr(),PREFS.large));
+      $('#undo').addEventListener('click', ()=>addPoints(todayStr(),-PREFS.small));
 
     // Nav
     $('#toHistory').addEventListener('click', ()=>{
       $$('.screen').forEach(s=>s.classList.remove('active'));
       $('#history').classList.add('active');
     });
-      $('#backHome').addEventListener('click', ()=>{
-        $$('.screen').forEach(s=>s.classList.remove('active'));
-        $('#home').classList.add('active');
-      });
-      $('#addHabit').addEventListener('click', ()=>{
+    $('#toSettings').addEventListener('click', ()=>{
+      $$('.screen').forEach(s=>s.classList.remove('active'));
+      $('#settings').classList.add('active');
+      $('#valSmall').value=PREFS.small;
+      $('#valMedium').value=PREFS.medium;
+      $('#valLarge').value=PREFS.large;
+      $('#valRecovery').value=PREFS.recovery;
+    });
+    $('#backHome').addEventListener('click', ()=>{
+      $$('.screen').forEach(s=>s.classList.remove('active'));
+      $('#home').classList.add('active');
+    });
+    $('#backHome2').addEventListener('click', ()=>{
+      $$('.screen').forEach(s=>s.classList.remove('active'));
+      $('#home').classList.add('active');
+    });
+    $('#addHabit').addEventListener('click', ()=>{
         const name=$('#newHabitName').value.trim();
         if(name){
           addHabit(name);
@@ -555,9 +625,9 @@
 
     // History date editor
     const getPickedDate = ()=> ($('#datePicker').value || todayStr());
-    $('#mark1').addEventListener('click', ()=> addPoints(getPickedDate(), 1));
-    $('#mark2').addEventListener('click', ()=> addPoints(getPickedDate(), 2));
-    $('#mark3').addEventListener('click', ()=> addPoints(getPickedDate(), 3));
+    $('#mark1').addEventListener('click', ()=> addPoints(getPickedDate(), PREFS.small));
+    $('#mark2').addEventListener('click', ()=> addPoints(getPickedDate(), PREFS.medium));
+    $('#mark3').addEventListener('click', ()=> addPoints(getPickedDate(), PREFS.large));
     $('#mark0').addEventListener('click', ()=> setPoints(getPickedDate(), 0));
 
     // Challenge actions
@@ -572,6 +642,21 @@
         st.horizon=Number($('#chalHorizon').value)||14;
         st.end=addDays(st.start, st.horizon-1); chalSave(st); render();
       }
+    });
+
+    $('#saveSettings').addEventListener('click', ()=>{
+      const prevRec=PREFS.recovery;
+      PREFS.small=Math.max(1,Number($('#valSmall').value)||1);
+      PREFS.medium=Math.max(1,Number($('#valMedium').value)||2);
+      PREFS.large=Math.max(1,Number($('#valLarge').value)||3);
+      PREFS.recovery=Math.max(0,Number($('#valRecovery').value)||0);
+      if(PREFS.recovery!==prevRec){
+        REC_HIST.push({date:todayStr(),value:PREFS.recovery});
+        saveRecHist();
+      }
+      savePrefs();
+      render();
+      notify('Settings saved');
     });
 
     function notify(msg){
