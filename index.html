@@ -586,10 +586,23 @@
 
       // ===== Events =====
     // FAB quick-add (today)
-      $('#add1').addEventListener('click', ()=>addPoints(todayStr(),PREFS.small));
-      $('#add2').addEventListener('click', ()=>addPoints(todayStr(),PREFS.medium));
-      $('#add3').addEventListener('click', ()=>addPoints(todayStr(),PREFS.large));
-      $('#undo').addEventListener('click', ()=>addPoints(todayStr(),-PREFS.small));
+      let lastNavAdd=null;
+      function navAdd(delta){
+        const ds=todayStr();
+        addPoints(ds,delta);
+        lastNavAdd={date:ds,delta};
+      }
+      $('#add1').addEventListener('click', ()=>navAdd(PREFS.small));
+      $('#add2').addEventListener('click', ()=>navAdd(PREFS.medium));
+      $('#add3').addEventListener('click', ()=>navAdd(PREFS.large));
+      $('#undo').addEventListener('click', ()=>{
+        if(lastNavAdd){
+          addPoints(lastNavAdd.date,-lastNavAdd.delta);
+          lastNavAdd=null;
+        } else {
+          notify('Nothing to undo');
+        }
+      });
 
     // Nav
     $('#toHistory').addEventListener('click', ()=>{
