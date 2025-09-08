@@ -213,12 +213,6 @@
 
       <h2 class="fab-avoid" style="margin:16px 0 8px;font-size:1.2rem;font-weight:800">Habits</h2>
       <div class="habit-list fab-avoid" id="habitList"></div>
-      <div class="edit-card fab-avoid" id="habitCard">
-        <div class="form">
-          <input type="text" id="newHabitName" placeholder="Name" />
-          <button class="btn mint" id="addHabit">Add</button>
-        </div>
-      </div>
 
       <div class="footer fab-avoid">
         <div>30d rolling = core. Data stored locally.</div>
@@ -265,12 +259,15 @@
     <!-- SETTINGS -->
     <section id="settings" class="screen" aria-labelledby="settingsTitle">
       <div class="toolbar brand">
-        <button class="home-btn cat" id="backHome2" aria-label="Back to Home">
-          <img alt="Treaty cat logo" />
-        </button>
-        <h1 id="settingsTitle">Settings</h1>
-      </div>
-      <div class="edit-card">
+      <button class="home-btn cat" id="backHome2" aria-label="Back to Home">
+        <img alt="Treaty cat logo" />
+      </button>
+      <h1 id="settingsTitle">Settings</h1>
+    </div>
+    <p class="muted" style="margin:0 0 8px;font-size:.9rem">
+      Data is stored locally and core metrics use the last 30 days. Aim to stay at or above 80%.
+    </p>
+    <div class="edit-card">
         <h3 style="margin:0 0 8px;font-size:1rem;font-weight:800;color:var(--ink)">Treat Values</h3>
         <p class="muted" style="margin:0 0 8px;font-size:.9rem">
           Small, medium, and large treats subtract these points. Defaults—1, 2, 3—make a large treat equal to three small ones.
@@ -294,23 +291,16 @@
           Completed habits add their value to that day's recovery. Defaults start at 1 so you decide the reward.
         </p>
         <div class="form" id="habitSettings" style="flex-direction:column;align-items:flex-start"></div>
+        <div class="form" style="margin-top:10px">
+          <input type="text" id="newHabitName" placeholder="Name" />
+          <button class="btn mint" id="addHabit">Add</button>
+        </div>
       </div>
       <div style="margin-top:12px">
         <button class="btn mint" id="saveSettings">Save</button>
       </div>
   </section>
 
-  </div>
-
-  <div id="editHabitModal" class="modal" hidden>
-    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="editHabitTitle">
-      <h3 id="editHabitTitle" style="margin:0;font-size:1rem;font-weight:800;color:var(--ink)">Edit Habit</h3>
-      <input type="text" id="editHabitInput" placeholder="Name" />
-      <div class="modal-actions">
-        <button class="btn ghost" id="cancelEdit">Cancel</button>
-        <button class="btn mint" id="confirmEdit">Save</button>
-      </div>
-    </div>
   </div>
 
   <script type="module">
@@ -323,7 +313,6 @@
       const PREF_KEY='mvp_prefs_v1';
       const CHAL_KEY='mvp_chal_v1';
       const CHAL_COLLAPSE_KEY='mvp_chal_collapsed_v1';
-      const HABIT_COLLAPSE_KEY='mvp_habit_collapsed_v1';
       const REC_KEY='mvp_recovery_hist_v1';
       const BONUS_KEY='mvp_bonus_hist_v1';
 
@@ -370,7 +359,6 @@
       return `${d}/${m}/${String(y).slice(2)}`;
     };
 
-      let editTarget=null;
 
       function load(){
         let rows=[];
@@ -626,13 +614,11 @@
           const span=document.createElement('span'); span.className='name'; span.textContent=`${h.name} (+${h.value})`;
           label.appendChild(cb); label.appendChild(span);
           row.appendChild(label);
-          const acts=document.createElement('div'); acts.className='row-actions';
-          const edit=document.createElement('button'); edit.className='btn ghost xs'; edit.textContent='✎'; edit.setAttribute('aria-label','Edit');
-          edit.addEventListener('click', ()=>editHabit(h.id));
-          const del=document.createElement('button'); del.className='btn ghost xs'; del.textContent='✕'; del.setAttribute('aria-label','Delete');
-          del.addEventListener('click', ()=>deleteHabit(h.id));
-          acts.appendChild(edit); acts.appendChild(del);
-          row.appendChild(acts);
+          const info=document.createElement('div');
+          info.className='muted small';
+          info.style.marginLeft='auto';
+          info.textContent = h.lastCompleted ? formatDate(h.lastCompleted) : '—';
+          row.appendChild(info);
           wrap.appendChild(row);
         });
         recalcBonus(today);
@@ -642,14 +628,6 @@
         list.push({id:Date.now().toString(),name,value:1,lastCompleted:null});
         saveHabits(list);
         renderHabits();
-      }
-      function editHabit(id){
-        const list=loadHabits();
-        const h=list.find(x=>x.id===id); if(!h) return;
-        editTarget=id;
-        $('#editHabitInput').value=h.name;
-        $('#editHabitModal').hidden=false;
-        $('#editHabitInput').focus();
       }
       function deleteHabit(id){
         let list=loadHabits();
@@ -675,29 +653,16 @@
         const list=loadHabits();
         wrap.innerHTML='';
         list.forEach(h=>{
-          const label=document.createElement('label'); label.className='muted';
-          label.textContent=h.name+' ';
-          const inp=document.createElement('input'); inp.type='number'; inp.min='0'; inp.style.width='60px';
-          inp.value=h.value; inp.dataset.id=h.id;
-          label.appendChild(inp);
-          wrap.appendChild(label);
+          const row=document.createElement('div'); row.className='form'; row.dataset.id=h.id;
+          const name=document.createElement('input'); name.type='text'; name.value=h.name; name.placeholder='Name'; name.dataset.id=h.id;
+          const inp=document.createElement('input'); inp.type='number'; inp.min='0'; inp.style.width='60px'; inp.value=h.value; inp.dataset.id=h.id;
+          const del=document.createElement('button'); del.className='btn ghost xs'; del.textContent='✕'; del.setAttribute('aria-label','Delete');
+          del.addEventListener('click', ()=>{ deleteHabit(h.id); renderHabitSettings(); });
+          row.appendChild(name); row.appendChild(inp); row.appendChild(del);
+          wrap.appendChild(row);
         });
       }
 
-      $('#cancelEdit').addEventListener('click', ()=>{
-        $('#editHabitModal').hidden=true;
-        editTarget=null;
-      });
-      $('#confirmEdit').addEventListener('click', ()=>{
-        const name=$('#editHabitInput').value.trim();
-        if(editTarget && name){
-          const list=loadHabits();
-          const h=list.find(x=>x.id===editTarget);
-          if(h){ h.name=name; saveHabits(list); renderHabits(); }
-        }
-        $('#editHabitModal').hidden=true;
-        editTarget=null;
-      });
 
       // ===== Events =====
     // FAB quick-add (today)
@@ -746,6 +711,7 @@
         if(name){
           addHabit(name);
           $('#newHabitName').value='';
+          renderHabitSettings();
         }
       });
 
@@ -785,9 +751,15 @@
       }
       savePrefs();
       const list=loadHabits();
-      $$('#habitSettings input').forEach(inp=>{
-        const h=list.find(x=>x.id===inp.dataset.id);
-        if(h) h.value=Math.max(0,Number(inp.value)||0);
+      $$('#habitSettings .form').forEach(row=>{
+        const id=row.dataset.id;
+        const h=list.find(x=>x.id===id);
+        if(h){
+          const name=row.querySelector('input[type="text"]').value.trim();
+          const val=row.querySelector('input[type="number"]').value;
+          h.name=name;
+          h.value=Math.max(0,Number(val)||0);
+        }
       });
       saveHabits(list);
       recalcBonus(todayStr());
@@ -801,25 +773,6 @@
       el.textContent=msg; el.style.display='block';
       clearTimeout(window.__toast);
       window.__toast=setTimeout(()=>{el.style.display='none'},1800);
-    }
-
-    // ===== Collapsible Add Habit =====
-    function setupHabitAccordion(){
-      const card=document.getElementById('habitCard'); if(!card) return;
-      if(card.querySelector('.acc-header')) return;
-      card.classList.add('accordion');
-      const content=document.createElement('div'); content.className='acc-content'; content.id='habitContent';
-      while(card.firstChild){ content.appendChild(card.firstChild); }
-      const btn=document.createElement('button'); btn.type='button'; btn.className='acc-header'; btn.id='habitToggle'; btn.setAttribute('aria-expanded','false');
-      btn.innerHTML=`<span class="acc-title">Add Habit</span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
-      card.appendChild(btn); card.appendChild(content);
-      const collapsed=(localStorage.getItem(HABIT_COLLAPSE_KEY) ?? '1') === '1';
-      content.hidden=collapsed; btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
-      btn.addEventListener('click', ()=>{
-        const nowHidden=!content.hidden; content.hidden=nowHidden;
-        btn.setAttribute('aria-expanded', nowHidden ? 'false' : 'true');
-        localStorage.setItem(HABIT_COLLAPSE_KEY, nowHidden ? '1' : '0');
-      });
     }
 
     // ===== Collapsible Challenge (idempotent, remembers state) =====
@@ -850,7 +803,6 @@
     (function init(){
       const st=load(); save(st.data, st.window);
       setupChallengeAccordion();
-      setupHabitAccordion();
       renderHabits();
       render(st.data, st.window);
     })();
