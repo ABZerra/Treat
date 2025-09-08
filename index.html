@@ -272,6 +272,9 @@
       </div>
       <div class="edit-card">
         <h3 style="margin:0 0 8px;font-size:1rem;font-weight:800;color:var(--ink)">Treat Values</h3>
+        <p class="muted" style="margin:0 0 8px;font-size:.9rem">
+          Small, medium, and large treats subtract these points. Defaults—1, 2, 3—make a large treat equal to three small ones.
+        </p>
         <div class="form">
           <label class="muted">Small <input type="number" id="valSmall" min="1" style="width:60px"></label>
           <label class="muted">Medium <input type="number" id="valMedium" min="1" style="width:60px"></label>
@@ -280,10 +283,16 @@
       </div>
       <div class="edit-card">
         <h3 style="margin:0 0 8px;font-size:1rem;font-weight:800;color:var(--ink)">Recovery</h3>
+        <p class="muted" style="margin:0 0 8px;font-size:.9rem">
+          This amount is added at the start of each day whether you treated yourself or not. The default of 1 lets you offset one small treat daily.
+        </p>
         <div class="form">
           <label class="muted">Daily amount <input type="number" id="valRecovery" min="0" style="width:80px"></label>
         </div>
         <h4 style="margin:12px 0 8px;font-size:1rem;font-weight:800;color:var(--ink)">Habit Values</h4>
+        <p class="muted" style="margin:0 0 8px;font-size:.9rem">
+          Completed habits add their value to that day's recovery. Defaults start at 1 so you decide the reward.
+        </p>
         <div class="form" id="habitSettings" style="flex-direction:column;align-items:flex-start"></div>
       </div>
       <div style="margin-top:12px">
