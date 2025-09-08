@@ -627,9 +627,9 @@
           label.appendChild(cb); label.appendChild(span);
           row.appendChild(label);
           const acts=document.createElement('div'); acts.className='row-actions';
-          const edit=document.createElement('button'); edit.className='btn ghost xs'; edit.textContent='Edit';
+          const edit=document.createElement('button'); edit.className='btn ghost xs'; edit.textContent='✎'; edit.setAttribute('aria-label','Edit');
           edit.addEventListener('click', ()=>editHabit(h.id));
-          const del=document.createElement('button'); del.className='btn ghost xs'; del.textContent='Delete';
+          const del=document.createElement('button'); del.className='btn ghost xs'; del.textContent='✕'; del.setAttribute('aria-label','Delete');
           del.addEventListener('click', ()=>deleteHabit(h.id));
           acts.appendChild(edit); acts.appendChild(del);
           row.appendChild(acts);
