@@ -186,10 +186,10 @@
             <polyline fill="none" stroke="#A7E0DC" stroke-width="2" points=""/>
           </svg>
 
-          <!-- Challenge Mode (v1 forward horizon) -->
+          <!-- Challenge Mode -->
           <div class="challenge" id="chalCard">
             <div class="bar">
-              <label class="muted small">Horizon</label>
+              <label class="muted small">Duration</label>
               <select id="chalHorizon">
                 <option value="7">7d</option>
                 <option value="14" selected>14d</option>
@@ -244,12 +244,6 @@
         </button>
         <h1 id="historyTitle">History</h1>
       </div>
-      <div class="table">
-        <table aria-describedby="historyTitle">
-          <thead><tr><th>Date</th><th>Points</th><th>Actions</th></tr></thead>
-          <tbody id="historyBody"></tbody>
-        </table>
-      </div>
       <div class="edit-card">
         <h3 style="margin:0 0 8px;font-size:1rem;font-weight:800;color:var(--ink)">Add / Edit a specific day</h3>
         <div class="form">
@@ -259,6 +253,12 @@
           <button class="btn coral" id="mark3">-3</button>
           <button class="btn ghost" id="mark0">Reset</button>
         </div>
+      </div>
+      <div class="table">
+        <table aria-describedby="historyTitle">
+          <thead><tr><th>Date</th><th>Points</th><th>Actions</th></tr></thead>
+          <tbody id="historyBody"></tbody>
+        </table>
       </div>
       </section>
 
@@ -271,7 +271,7 @@
         <h1 id="settingsTitle">Settings</h1>
       </div>
       <div class="edit-card">
-        <h3 style="margin:0 0 8px;font-size:1rem;font-weight:800;color:var(--ink)">Cheat Values</h3>
+        <h3 style="margin:0 0 8px;font-size:1rem;font-weight:800;color:var(--ink)">Treat Values</h3>
         <div class="form">
           <label class="muted">Small <input type="number" id="valSmall" min="1" style="width:60px"></label>
           <label class="muted">Medium <input type="number" id="valMedium" min="1" style="width:60px"></label>
@@ -346,6 +346,10 @@
       new Date(d.getTime() - d.getTimezoneOffset() * 60000)
         .toISOString()
         .slice(0,10);
+    const formatDate = ds => {
+      const [y,m,d] = String(ds).slice(0,10).split('-');
+      return `${d}/${m}/${String(y).slice(2)}`;
+    };
 
       let editTarget=null;
 
@@ -540,7 +544,7 @@
           } else {
             rows.forEach(r=>{
               const tr=document.createElement('tr');
-              const td1=document.createElement('td'); td1.textContent=r.date; tr.appendChild(td1);
+              const td1=document.createElement('td'); td1.textContent=formatDate(r.date); tr.appendChild(td1);
               const td2=document.createElement('td'); const chip=document.createElement('span');
               const cls = (r.n>=PREFS.large?'coral': r.n===PREFS.medium?'amber': (r.n===PREFS.small||r.n===-PREFS.small)?'mint':'neutral');
               chip.className='chip '+cls;
