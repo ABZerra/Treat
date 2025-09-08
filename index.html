@@ -97,13 +97,21 @@
     .edit-card{margin-top:12px;background:var(--panel);border-radius:var(--r-lg);box-shadow:var(--shadow);padding:12px}
     .form{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
     input[type="date"],select.window{appearance:none;border:1px solid var(--gray);border-radius:999px;padding:10px 12px;background:#fff;color:var(--ink)}
+    input[type="text"],input[type="number"]{appearance:none;border:1px solid var(--gray);border-radius:999px;padding:8px 10px;background:#fff;color:var(--ink);font-size:.95rem}
+    input::placeholder{color:var(--muted)}
 
     /* Habits */
     .habit-list{display:flex;flex-direction:column;gap:6px}
     .habit-row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
-    .habit-row.completed .name{text-decoration:line-through;color:var(--muted)}
+    .name{font-size:.95rem;color:var(--muted)}
+    .habit-row.completed .name{text-decoration:line-through}
 
     .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(88px + env(safe-area-inset-bottom));background:#ffffff;border:1px solid #E7F1F0;box-shadow:var(--shadow);padding:10px 12px;border-radius:12px;font-weight:700;color:var(--ink);display:none;z-index:50}
+
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;z-index:200}
+    .modal[hidden]{display:none}
+    .modal-card{background:var(--panel);border-radius:var(--r-lg);box-shadow:var(--shadow);padding:16px;display:flex;flex-direction:column;gap:10px;width:90%;max-width:320px}
+    .modal-actions{display:flex;gap:8px;justify-content:flex-end}
 
     /* Accordion bits */
     .acc-header{width:100%;display:flex;align-items:center;gap:10px;justify-content:space-between;padding:10px 12px;border:1px solid #E7F1F0;border-radius:12px;background:#F7FBFA;cursor:pointer}
@@ -267,8 +275,19 @@
       <div class="edit-card">
         <button class="btn mint" id="saveSettings">Save</button>
       </div>
-    </section>
+  </section>
 
+  </div>
+
+  <div id="editHabitModal" class="modal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="editHabitTitle">
+      <h3 id="editHabitTitle" style="margin:0;font-size:1rem;font-weight:800;color:var(--ink)">Edit Habit</h3>
+      <input type="text" id="editHabitInput" placeholder="Name" />
+      <div class="modal-actions">
+        <button class="btn ghost" id="cancelEdit">Cancel</button>
+        <button class="btn mint" id="confirmEdit">Save</button>
+      </div>
+    </div>
   </div>
 
   <script type="module">
@@ -314,6 +333,8 @@
       new Date(d.getTime() - d.getTimezoneOffset() * 60000)
         .toISOString()
         .slice(0,10);
+
+      let editTarget=null;
 
       function load(){
         let rows=[];
@@ -566,8 +587,10 @@
       function editHabit(id){
         const list=loadHabits();
         const h=list.find(x=>x.id===id); if(!h) return;
-        const name=prompt('Edit habit name', h.name);
-        if(name){ h.name=name; saveHabits(list); renderHabits(); }
+        editTarget=id;
+        $('#editHabitInput').value=h.name;
+        $('#editHabitModal').hidden=false;
+        $('#editHabitInput').focus();
       }
       function deleteHabit(id){
         let list=loadHabits();
@@ -583,6 +606,21 @@
         saveHabits(list);
         renderHabits();
       }
+
+      $('#cancelEdit').addEventListener('click', ()=>{
+        $('#editHabitModal').hidden=true;
+        editTarget=null;
+      });
+      $('#confirmEdit').addEventListener('click', ()=>{
+        const name=$('#editHabitInput').value.trim();
+        if(editTarget && name){
+          const list=loadHabits();
+          const h=list.find(x=>x.id===editTarget);
+          if(h){ h.name=name; saveHabits(list); renderHabits(); }
+        }
+        $('#editHabitModal').hidden=true;
+        editTarget=null;
+      });
 
       // ===== Events =====
     // FAB quick-add (today)
