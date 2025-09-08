@@ -124,11 +124,17 @@
     .modal-actions{display:flex;gap:8px;justify-content:flex-end}
 
     /* Accordion bits */
-    .acc-header{width:100%;display:flex;align-items:center;gap:10px;justify-content:space-between;padding:10px 12px;border:1px solid #E7F1F0;border-radius:12px;background:#F7FBFA;cursor:pointer}
+    .accordion{width:100%;border:1px solid #E7F1F0;border-radius:12px;background:#F7FBFA;box-sizing:border-box;overflow:hidden;padding:0}
+    .acc-header{width:100%;display:flex;align-items:center;gap:10px;justify-content:space-between;padding:10px 12px;background:inherit;cursor:pointer;border:0;outline:0}
+    .acc-header:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
     .acc-title{font-weight:800}
     .acc-status{font-size:.85rem;color:var(--muted);margin-left:auto;margin-right:6px}
     .chev{transition:transform .2s ease}
     .acc-header[aria-expanded="true"] .chev{transform:rotate(180deg)}
+    .acc-content{width:100%;padding:10px 12px;box-sizing:border-box}
+    .acc-content > *{margin-top:10px}
+    .acc-content > *:first-child{margin-top:0}
+    .acc-content .bar{margin:0}
     .acc-content[hidden]{display:none}
   </style>
 </head>
@@ -728,6 +734,7 @@
     function setupHabitAccordion(){
       const card=document.getElementById('habitCard'); if(!card) return;
       if(card.querySelector('.acc-header')) return;
+      card.classList.add('accordion');
       const content=document.createElement('div'); content.className='acc-content'; content.id='habitContent';
       while(card.firstChild){ content.appendChild(card.firstChild); }
       const btn=document.createElement('button'); btn.type='button'; btn.className='acc-header'; btn.id='habitToggle'; btn.setAttribute('aria-expanded','false');
@@ -746,6 +753,7 @@
     function setupChallengeAccordion(){
       const card=document.getElementById('chalCard'); if(!card) return;
       if(card.querySelector('.acc-header')) return; // already wrapped
+      card.classList.add('accordion');
       const content=document.createElement('div'); content.className='acc-content'; content.id='chalContent';
       while(card.firstChild){ content.appendChild(card.firstChild); }
       const btn=document.createElement('button'); btn.type='button'; btn.className='acc-header'; btn.id='chalToggle'; btn.setAttribute('aria-expanded','false');
