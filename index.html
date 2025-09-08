@@ -284,6 +284,10 @@
           <label class="muted">Daily amount <input type="number" id="valRecovery" min="0" style="width:80px"></label>
         </div>
       </div>
+      <div class="edit-card">
+        <h3 style="margin:0 0 8px;font-size:1rem;font-weight:800;color:var(--ink)">Habit Values</h3>
+        <div class="form" id="habitSettings" style="flex-direction:column;align-items:flex-start"></div>
+      </div>
       <div style="margin-top:12px">
         <button class="btn mint" id="saveSettings">Save</button>
       </div>
@@ -314,11 +318,14 @@
       const CHAL_COLLAPSE_KEY='mvp_chal_collapsed_v1';
       const HABIT_COLLAPSE_KEY='mvp_habit_collapsed_v1';
       const REC_KEY='mvp_recovery_hist_v1';
+      const BONUS_KEY='mvp_bonus_hist_v1';
 
       let PREFS={window:30,small:1,medium:2,large:3,recovery:1};
       let REC_HIST=[];
+      let BONUS_HIST=[];
       function savePrefs(){ localStorage.setItem(PREF_KEY, JSON.stringify(PREFS)); }
       function saveRecHist(){ localStorage.setItem(REC_KEY, JSON.stringify(REC_HIST)); }
+      function saveBonusHist(){ localStorage.setItem(BONUS_KEY, JSON.stringify(BONUS_HIST)); }
 
       function loadRecHist(){
         try{REC_HIST=JSON.parse(localStorage.getItem(REC_KEY)||'[]')}catch(e){REC_HIST=[]}
@@ -328,6 +335,11 @@
         } else {
           REC_HIST.sort((a,b)=>String(a.date).localeCompare(String(b.date)));
         }
+      }
+      function loadBonusHist(){
+        try{BONUS_HIST=JSON.parse(localStorage.getItem(BONUS_KEY)||'[]')}catch(e){BONUS_HIST=[]}
+        if(!Array.isArray(BONUS_HIST)) BONUS_HIST=[];
+        BONUS_HIST.sort((a,b)=>String(a.date).localeCompare(String(b.date)));
       }
 
     // Migrate older keys if present
@@ -358,6 +370,7 @@
         try{rows=JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){}
         try{PREFS=Object.assign({window:30,small:1,medium:2,large:3,recovery:1},JSON.parse(localStorage.getItem(PREF_KEY)||'{}'))}catch(e){}
         loadRecHist();
+        loadBonusHist();
         const map=new Map();
       for(const r of rows){
         const ds=String(r.date||r).slice(0,10);
@@ -381,6 +394,19 @@
         }
         return val;
       }
+      function bonusOn(ds){
+        const rec=BONUS_HIST.find(r=>r.date===ds);
+        return rec ? Number(rec.value)||0 : 0;
+      }
+      function recalcBonus(ds){
+        const list=loadHabits();
+        const sum=list.filter(h=>h.lastCompleted===ds)
+          .reduce((s,h)=>s+Number(h.value||1),0);
+        BONUS_HIST=BONUS_HIST.filter(r=>r.date!==ds);
+        if(sum>0) BONUS_HIST.push({date:ds,value:sum});
+        BONUS_HIST.sort((a,b)=>a.date.localeCompare(b.date));
+        saveBonusHist();
+      }
 
       // ===== Core rolling-window stats (20% budget, daily decay) =====
       function stats(data,windowDays){
@@ -392,14 +418,14 @@
           const d=new Date(start);d.setDate(start.getDate()+i);
           const ds=todayStr(d);
           const pts=byDate.get(ds)||0;
-          const recVal=recoveryOn(ds);
+          const recVal=recoveryOn(ds) + bonusOn(ds);
           const recovered=Math.min(debt,recVal);
           if(recovered>0){ debt-=recovered; rows.push({date:ds,n:-recovered}); }
           if(pts>0){ debt+=pts; rows.push({date:ds,n:pts}); }
         }
         const allowed=Math.floor(0.2*windowDays);
         const healthyPct=Math.round(100-(Math.min(windowDays,debt)/windowDays)*100);
-        const recToday=recoveryOn(todayStr());
+        const recToday=recoveryOn(todayStr()) + bonusOn(todayStr());
         let recovery=null;
         if(debt>allowed && recToday>0){
           const rec=new Date(end);rec.setDate(end.getDate()+Math.ceil((debt-allowed)/recToday));
@@ -571,7 +597,11 @@
 
       // ===== Habits =====
       const HABITS_KEY='treat_habits_v1';
-      function loadHabits(){ try{return JSON.parse(localStorage.getItem(HABITS_KEY)||'[]')}catch(e){return[]} }
+      function loadHabits(){
+        let list=[];
+        try{list=JSON.parse(localStorage.getItem(HABITS_KEY)||'[]')}catch(e){list=[]}
+        return list.map(h=>({id:h.id,name:h.name,lastCompleted:h.lastCompleted||null,value:Number(h.value)||1}));
+      }
       function saveHabits(list){ localStorage.setItem(HABITS_KEY, JSON.stringify(list)); }
       function renderHabits(){
         const list=loadHabits();
@@ -586,7 +616,7 @@
           label.style.display='flex'; label.style.alignItems='center'; label.style.gap='8px';
           const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=(h.lastCompleted===today);
           cb.addEventListener('change', ()=>toggleHabit(h.id));
-          const span=document.createElement('span'); span.className='name'; span.textContent=h.name;
+          const span=document.createElement('span'); span.className='name'; span.textContent=`${h.name} (+${h.value})`;
           label.appendChild(cb); label.appendChild(span);
           row.appendChild(label);
           const acts=document.createElement('div'); acts.className='row-actions';
@@ -598,10 +628,11 @@
           row.appendChild(acts);
           wrap.appendChild(row);
         });
+        recalcBonus(today);
       }
       function addHabit(name){
         const list=loadHabits();
-        list.push({id:Date.now().toString(),name,lastCompleted:null});
+        list.push({id:Date.now().toString(),name,value:1,lastCompleted:null});
         saveHabits(list);
         renderHabits();
       }
@@ -617,7 +648,9 @@
         let list=loadHabits();
         list=list.filter(h=>h.id!==id);
         saveHabits(list);
+        recalcBonus(todayStr());
         renderHabits();
+        render();
       }
       function toggleHabit(id){
         const list=loadHabits();
@@ -625,7 +658,23 @@
         const today=todayStr();
         h.lastCompleted = (h.lastCompleted===today) ? null : today;
         saveHabits(list);
+        recalcBonus(today);
         renderHabits();
+        render();
+      }
+
+      function renderHabitSettings(){
+        const wrap=$('#habitSettings'); if(!wrap) return;
+        const list=loadHabits();
+        wrap.innerHTML='';
+        list.forEach(h=>{
+          const label=document.createElement('label'); label.className='muted';
+          label.textContent=h.name+' ';
+          const inp=document.createElement('input'); inp.type='number'; inp.min='0'; inp.style.width='60px';
+          inp.value=h.value; inp.dataset.id=h.id;
+          label.appendChild(inp);
+          wrap.appendChild(label);
+        });
       }
 
       $('#cancelEdit').addEventListener('click', ()=>{
@@ -675,6 +724,7 @@
       $('#valMedium').value=PREFS.medium;
       $('#valLarge').value=PREFS.large;
       $('#valRecovery').value=PREFS.recovery;
+      renderHabitSettings();
     });
     $('#backHome').addEventListener('click', ()=>{
       $$('.screen').forEach(s=>s.classList.remove('active'));
@@ -727,6 +777,14 @@
         saveRecHist();
       }
       savePrefs();
+      const list=loadHabits();
+      $$('#habitSettings input').forEach(inp=>{
+        const h=list.find(x=>x.id===inp.dataset.id);
+        if(h) h.value=Math.max(0,Number(inp.value)||0);
+      });
+      saveHabits(list);
+      recalcBonus(todayStr());
+      renderHabits();
       render();
       notify('Settings saved');
     });
