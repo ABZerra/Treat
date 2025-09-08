@@ -76,6 +76,7 @@
     .footer{margin-top:14px;display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:.9rem}
     .link{text-decoration:underline;cursor:pointer}
     .btn.mint{background:var(--mint)}.btn.amber{background:var(--amber)}.btn.coral{background:var(--coral)}
+    .fab-avoid{margin-right:72px}
 
     .fab-stack{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom));right:16px;display:flex;flex-direction:column;gap:12px;z-index:100}
     .fab-btn{width:56px;height:56px;border-radius:50%;border:0;display:grid;place-items:center;font-weight:800;color:var(--ink);box-shadow:var(--shadow);transition:transform .2s ease,opacity .2s ease;position:relative;opacity:0;transform:translateY(20px);cursor:pointer}
@@ -204,9 +205,9 @@
         </div>
       </div>
 
-      <h2 style="margin:16px 0 8px;font-size:1.2rem;font-weight:800">Habits</h2>
-      <div class="habit-list" id="habitList"></div>
-      <div class="edit-card">
+      <h2 class="fab-avoid" style="margin:16px 0 8px;font-size:1.2rem;font-weight:800">Habits</h2>
+      <div class="habit-list fab-avoid" id="habitList"></div>
+      <div class="edit-card fab-avoid">
         <h3 style="margin:0 0 8px;font-size:1rem;font-weight:800;color:var(--ink)">Add Habit</h3>
         <div class="form">
           <input type="text" id="newHabitName" placeholder="Name" />
@@ -214,7 +215,7 @@
         </div>
       </div>
 
-      <div class="footer">
+      <div class="footer fab-avoid">
         <div>30d rolling = core. Data stored locally.</div>
         <div style="display:flex;gap:8px;">
           <div class="link" id="toHistory">View History</div>
@@ -222,9 +223,9 @@
         </div>
       </div>
       <div class="fab-stack">
-        <button class="fab-btn mint" id="add1" aria-label="Small" data-tip="Small (-1)">-1</button>
-        <button class="fab-btn amber" id="add2" aria-label="Medium" data-tip="Medium (-2)">-2</button>
-        <button class="fab-btn coral" id="add3" aria-label="Large" data-tip="Large (-3)">-3</button>
+        <button class="fab-btn mint" id="add1" aria-label="-1" data-tip="-1">-1</button>
+        <button class="fab-btn amber" id="add2" aria-label="-2" data-tip="-2">-2</button>
+        <button class="fab-btn coral" id="add3" aria-label="-3" data-tip="-3">-3</button>
         <button class="fab-btn ghost" id="undo" aria-label="Undo" data-tip="Undo">↺</button>
       </div>
       <div id="toast" class="toast" role="status" aria-live="polite"></div>
@@ -463,9 +464,9 @@
         const s=stats(data, windowDays);
 
         // Update button labels based on preferences
-        const a1=$('#add1'); if(a1) a1.textContent=`Small (-${PREFS.small})`;
-        const a2=$('#add2'); if(a2) a2.textContent=`Medium (-${PREFS.medium})`;
-        const a3=$('#add3'); if(a3) a3.textContent=`Large (-${PREFS.large})`;
+        const a1=$('#add1'); if(a1){a1.textContent=`-${PREFS.small}`;a1.setAttribute('data-tip',`-${PREFS.small}`);a1.setAttribute('aria-label',`-${PREFS.small}`);}
+        const a2=$('#add2'); if(a2){a2.textContent=`-${PREFS.medium}`;a2.setAttribute('data-tip',`-${PREFS.medium}`);a2.setAttribute('aria-label',`-${PREFS.medium}`);}
+        const a3=$('#add3'); if(a3){a3.textContent=`-${PREFS.large}`;a3.setAttribute('data-tip',`-${PREFS.large}`);a3.setAttribute('aria-label',`-${PREFS.large}`);}
         const m1=$('#mark1'); if(m1) m1.textContent='-'+PREFS.small;
         const m2=$('#mark2'); if(m2) m2.textContent='-'+PREFS.medium;
         const m3=$('#mark3'); if(m3) m3.textContent='-'+PREFS.large;
