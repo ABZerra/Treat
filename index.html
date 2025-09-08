@@ -215,9 +215,9 @@
       <div aria-hidden="true" style="height:16px"></div>
       <div class="fab">
         <div class="row">
-          <button class="btn mint"  id="add1">Small (+1)</button>
-          <button class="btn amber" id="add2">Medium (+2)</button>
-          <button class="btn coral" id="add3">Large (+3)</button>
+          <button class="btn mint"  id="add1">Small (-1)</button>
+          <button class="btn amber" id="add2">Medium (-2)</button>
+          <button class="btn coral" id="add3">Large (-3)</button>
           <button class="btn ghost" id="undo">Undo</button>
         </div>
       </div>
@@ -242,9 +242,9 @@
         <h3 style="margin:0 0 8px;font-size:1rem;font-weight:800;color:var(--ink)">Add / Edit a specific day</h3>
         <div class="form">
           <input type="date" id="datePicker" />
-          <button class="btn mint"  id="mark1">+1</button>
-          <button class="btn amber" id="mark2">+2</button>
-          <button class="btn coral" id="mark3">+3</button>
+          <button class="btn mint"  id="mark1">-1</button>
+          <button class="btn amber" id="mark2">-2</button>
+          <button class="btn coral" id="mark3">-3</button>
           <button class="btn ghost" id="mark0">Reset</button>
         </div>
       </div>
@@ -435,7 +435,7 @@
       const out=[...map.entries()].map(([date,n])=>({date,n}));
       save(out, st.window);
       render(out, st.window);
-      notify((delta>=0?'+':'')+delta+' on '+ds);
+      notify((delta>=0?'-':'+')+Math.abs(delta)+' on '+ds);
     }
     function setPoints(ds, n){
       const st=load(); const map=new Map(st.data.map(r=>[r.date,r.n]));
@@ -444,7 +444,7 @@
       save(out, st.window);
       render(out, st.window);
       const delta = n - prev;
-      notify((delta>=0?'Set ':'Set ')+ds+' to '+(n>0?('+'+n):'0'));
+      notify((delta>=0?'Set ':'Set ')+ds+' to '+(n>0?('-'+n):(n<0?('+'+(-n)):'0')));
     }
 
     // ===== Rendering =====
@@ -457,12 +457,12 @@
         const s=stats(data, windowDays);
 
         // Update button labels based on preferences
-        const a1=$('#add1'); if(a1) a1.textContent=`Small (+${PREFS.small})`;
-        const a2=$('#add2'); if(a2) a2.textContent=`Medium (+${PREFS.medium})`;
-        const a3=$('#add3'); if(a3) a3.textContent=`Large (+${PREFS.large})`;
-        const m1=$('#mark1'); if(m1) m1.textContent='+'+PREFS.small;
-        const m2=$('#mark2'); if(m2) m2.textContent='+'+PREFS.medium;
-        const m3=$('#mark3'); if(m3) m3.textContent='+'+PREFS.large;
+        const a1=$('#add1'); if(a1) a1.textContent=`Small (-${PREFS.small})`;
+        const a2=$('#add2'); if(a2) a2.textContent=`Medium (-${PREFS.medium})`;
+        const a3=$('#add3'); if(a3) a3.textContent=`Large (-${PREFS.large})`;
+        const m1=$('#mark1'); if(m1) m1.textContent='-'+PREFS.small;
+        const m2=$('#mark2'); if(m2) m2.textContent='-'+PREFS.medium;
+        const m3=$('#mark3'); if(m3) m3.textContent='-'+PREFS.large;
 
       // Meter + headline + pills
       $('#meterFill').style.height=Math.max(0,Math.min(100,s.healthyPct))+'%';
@@ -527,15 +527,15 @@
               const td2=document.createElement('td'); const chip=document.createElement('span');
               const cls = (r.n>=PREFS.large?'coral': r.n===PREFS.medium?'amber': (r.n===PREFS.small||r.n===-PREFS.small)?'mint':'neutral');
               chip.className='chip '+cls;
-              chip.textContent = r.n>0 ? ('+'+r.n) : r.n;
+              chip.textContent = r.n>0 ? ('-'+r.n) : ('+'+(-r.n));
               td2.appendChild(chip); tr.appendChild(td2);
               const td3=document.createElement('td'); const acts=document.createElement('div'); acts.className='row-actions';
-              [`+${PREFS.small}`,`+${PREFS.medium}`,`+${PREFS.large}`,`-${PREFS.small}`,'Reset'].forEach(lbl=>{
+              [`-${PREFS.small}`,`-${PREFS.medium}`,`-${PREFS.large}`,`+${PREFS.small}`,'Reset'].forEach(lbl=>{
                 const b=document.createElement('button'); b.className='btn ghost xs'; b.textContent=lbl;
-                b.onclick=()=>{ if(lbl===`+${PREFS.small}`) addPoints(r.date,PREFS.small);
-                                if(lbl===`+${PREFS.medium}`) addPoints(r.date,PREFS.medium);
-                                if(lbl===`+${PREFS.large}`) addPoints(r.date,PREFS.large);
-                                if(lbl===`-${PREFS.small}`) addPoints(r.date,-PREFS.small);
+                b.onclick=()=>{ if(lbl===`-${PREFS.small}`) addPoints(r.date,PREFS.small);
+                                if(lbl===`-${PREFS.medium}`) addPoints(r.date,PREFS.medium);
+                                if(lbl===`-${PREFS.large}`) addPoints(r.date,PREFS.large);
+                                if(lbl===`+${PREFS.small}`) addPoints(r.date,-PREFS.small);
                                 if(lbl==='Reset') setPoints(r.date,0); };
                 acts.appendChild(b);
               });
