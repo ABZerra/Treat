@@ -66,7 +66,7 @@
     .challenge{margin-top:10px;border-top:1px dashed #eee;padding-top:10px}
     .bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:6px 0}
     select{appearance:none;border:1px solid var(--gray);border-radius:999px;padding:8px 10px;background:#fff;color:var(--ink)}
-    .btn{appearance:none;border:1px solid transparent;border-radius:999px;padding:10px 14px;font-weight:700;cursor:pointer;font-size:.95rem}
+    .btn{appearance:none;border:1px solid transparent;border-radius:999px;padding:8px 12px;font-weight:700;cursor:pointer;font-size:.9rem}
     .btn.ok{background:#CDECC7}
     .btn.ghost{background:transparent;border-color:var(--gray);color:var(--ink)}
     .small{font-size:.85rem}
@@ -197,7 +197,7 @@
                 <option value="30">30d</option>
               </select>
               <button class="btn ok" id="chalStart">Start today</button>
-              <button class="btn ghost" id="chalStop">End challenge</button>
+              <button class="btn ghost" id="chalStop" style="display:none">End challenge</button>
               <div class="small muted" id="chalRange" style="margin-left:auto">—</div>
             </div>
             <div class="legend-list small">
@@ -508,6 +508,10 @@
       const spentLeftEl=$('#chalSpentLeft');
       const statusEl=$('#chalStatus');
       const headerStatus=$('#chalHeaderStatus');
+      const startBtn=$('#chalStart');
+      const stopBtn=$('#chalStop');
+      if(startBtn) startBtn.style.display = chal.active ? 'none' : '';
+      if(stopBtn) stopBtn.style.display = chal.active ? '' : 'none';
 
       if(!chal.active){
         if(rangeEl) rangeEl.textContent='—';
