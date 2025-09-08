@@ -207,8 +207,7 @@
 
       <h2 class="fab-avoid" style="margin:16px 0 8px;font-size:1.2rem;font-weight:800">Habits</h2>
       <div class="habit-list fab-avoid" id="habitList"></div>
-      <div class="edit-card fab-avoid">
-        <h3 style="margin:0 0 8px;font-size:1rem;font-weight:800;color:var(--ink)">Add Habit</h3>
+      <div class="edit-card fab-avoid" id="habitCard">
         <div class="form">
           <input type="text" id="newHabitName" placeholder="Name" />
           <button class="btn mint" id="addHabit">Add</button>
@@ -218,7 +217,7 @@
       <div class="footer fab-avoid">
         <div>30d rolling = core. Data stored locally.</div>
         <div style="display:flex;gap:8px;">
-          <div class="link" id="toHistory">View History</div>
+          <div class="link" id="toHistory">History</div>
           <div class="link" id="toSettings">Settings</div>
         </div>
       </div>
@@ -279,7 +278,7 @@
           <label class="muted">Daily amount <input type="number" id="valRecovery" min="0" style="width:80px"></label>
         </div>
       </div>
-      <div class="edit-card">
+      <div style="margin-top:12px">
         <button class="btn mint" id="saveSettings">Save</button>
       </div>
   </section>
@@ -307,6 +306,7 @@
       const PREF_KEY='mvp_prefs_v1';
       const CHAL_KEY='mvp_chal_v1';
       const CHAL_COLLAPSE_KEY='mvp_chal_collapsed_v1';
+      const HABIT_COLLAPSE_KEY='mvp_habit_collapsed_v1';
       const REC_KEY='mvp_recovery_hist_v1';
 
       let PREFS={window:30,small:1,medium:2,large:3,recovery:1};
@@ -724,6 +724,24 @@
       window.__toast=setTimeout(()=>{el.style.display='none'},1800);
     }
 
+    // ===== Collapsible Add Habit =====
+    function setupHabitAccordion(){
+      const card=document.getElementById('habitCard'); if(!card) return;
+      if(card.querySelector('.acc-header')) return;
+      const content=document.createElement('div'); content.className='acc-content'; content.id='habitContent';
+      while(card.firstChild){ content.appendChild(card.firstChild); }
+      const btn=document.createElement('button'); btn.type='button'; btn.className='acc-header'; btn.id='habitToggle'; btn.setAttribute('aria-expanded','false');
+      btn.innerHTML=`<span class="acc-title">Add Habit</span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
+      card.appendChild(btn); card.appendChild(content);
+      const collapsed=(localStorage.getItem(HABIT_COLLAPSE_KEY) ?? '1') === '1';
+      content.hidden=collapsed; btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+      btn.addEventListener('click', ()=>{
+        const nowHidden=!content.hidden; content.hidden=nowHidden;
+        btn.setAttribute('aria-expanded', nowHidden ? 'false' : 'true');
+        localStorage.setItem(HABIT_COLLAPSE_KEY, nowHidden ? '1' : '0');
+      });
+    }
+
     // ===== Collapsible Challenge (idempotent, remembers state) =====
     function setupChallengeAccordion(){
       const card=document.getElementById('chalCard'); if(!card) return;
@@ -751,6 +769,7 @@
     (function init(){
       const st=load(); save(st.data, st.window);
       setupChallengeAccordion();
+      setupHabitAccordion();
       renderHabits();
       render(st.data, st.window);
     })();
