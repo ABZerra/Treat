@@ -350,7 +350,7 @@
       function loadBonusHist(){
         try{BONUS_HIST=JSON.parse(localStorage.getItem(BONUS_KEY)||'[]')}catch(e){BONUS_HIST=[]}
         if(!Array.isArray(BONUS_HIST)) BONUS_HIST=[];
-        BONUS_HIST=BONUS_HIST.map(r=>({date:r.date,value:Number(r.value)||0,habits:r.habits||[]}));
+        BONUS_HIST=BONUS_HIST.map(r=>({date:r.date,value:Number(r.value)||0,habits:r.habits||[],manual:Number(r.manual)||0}));
         BONUS_HIST.sort((a,b)=>String(a.date).localeCompare(String(b.date)));
       }
 
@@ -409,14 +409,18 @@
       }
       function bonusOn(ds){
         const rec=BONUS_HIST.find(r=>r.date===ds);
-        return rec ? {value:Number(rec.value)||0, habits:rec.habits||[]} : {value:0, habits:[]};
+        return rec ? {value:Number(rec.value)||0, habits:rec.habits||[], manual:Number(rec.manual)||0} : {value:0, habits:[], manual:0};
       }
       function recalcBonus(ds){
         const list=loadHabits();
         const done=list.filter(h=>h.lastCompleted===ds);
         const sum=done.reduce((s,h)=>s+Number(h.value||1),0);
+        const prev=BONUS_HIST.find(r=>r.date===ds);
+        const manual=prev ? Number(prev.manual)||0 : 0;
         BONUS_HIST=BONUS_HIST.filter(r=>r.date!==ds);
-        if(sum>0) BONUS_HIST.push({date:ds,value:sum,habits:done.map(h=>h.name)});
+        if(sum>0 || manual>0){
+          BONUS_HIST.push({date:ds,value:sum+manual,habits:done.map(h=>h.name),manual});
+        }
         BONUS_HIST.sort((a,b)=>a.date.localeCompare(b.date));
         saveBonusHist();
       }
@@ -437,9 +441,11 @@
           const recovered=Math.min(debt,recVal);
           if(recovered>0){
             let dailyUsed=Math.min(recBase,recovered);
-            let bonusUsed=Math.min(b.value,recovered-dailyUsed);
+            let bonusPool=recovered-dailyUsed;
+            let manualUsed=Math.min(b.manual,bonusPool);
+            let habitUsed=Math.min(b.value-b.manual,bonusPool-manualUsed);
             debt-=recovered;
-            rows.push({date:ds,n:-recovered,type:'recovery',daily:dailyUsed,bonus:bonusUsed,habits:b.habits});
+            rows.push({date:ds,n:-recovered,type:'recovery',daily:dailyUsed,bonus:habitUsed,manual:manualUsed,habits:b.habits});
           }
           if(pts>0){ debt+=pts; rows.push({date:ds,n:pts,type:'treat'}); }
         }
@@ -510,6 +516,20 @@
       notify((delta>=0?'Set ':'Set ')+ds+' to '+(n>0?('-'+n):(n<0?('+'+(-n)):'0')));
     }
 
+    function addBonus(ds, delta){
+      const rec=BONUS_HIST.find(r=>r.date===ds);
+      if(rec){
+        rec.value=Number(rec.value||0)+delta;
+        rec.manual=Number(rec.manual||0)+delta;
+      } else {
+        BONUS_HIST.push({date:ds,value:delta,habits:[],manual:delta});
+      }
+      BONUS_HIST.sort((a,b)=>a.date.localeCompare(b.date));
+      saveBonusHist();
+      render();
+      notify('Bonus +'+delta+' on '+ds);
+    }
+
     function describeTreat(n){
       const parts=[]; let rem=n;
       const sizes=[
@@ -532,6 +552,7 @@
           const names=(r.habits||[]).join(' + ');
           segs.push(names?`Habits ${names} (+${r.bonus})`:`Habits +${r.bonus}`);
         }
+        if(r.manual) segs.push(`Bonus +${r.manual}`);
         const detail=segs.join(' / ');
         return detail ? `Recovery: ${detail}` : 'Recovery';
       } else {
@@ -827,7 +848,7 @@
     $('#mark1').addEventListener('click', ()=> addPoints(getPickedDate(), PREFS.small));
     $('#mark2').addEventListener('click', ()=> addPoints(getPickedDate(), PREFS.medium));
     $('#mark3').addEventListener('click', ()=> addPoints(getPickedDate(), PREFS.large));
-    $('#markR').addEventListener('click', ()=> addPoints(getPickedDate(), -PREFS.small));
+    $('#markR').addEventListener('click', ()=> addBonus(getPickedDate(), 1));
     $('#markClear').addEventListener('click', ()=>{
       const ds=getPickedDate();
       setPoints(ds,0);
