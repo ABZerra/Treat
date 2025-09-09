@@ -19,8 +19,9 @@
       --teal:#A7E0DC;--mint:#CDECC7;--amber:#FFE3A1;--coral:#FFB3AB;--gray:#D8D8D8;--chip:#F3F3F3;
       --meter-a:#CDECC7;--meter-b:#BEE58C;--target:#FFC107;
       --r-lg:16px;--shadow:0 10px 30px rgba(0,0,0,.08);
-      --fab-h:260px;
+      --fab-h:328px;
     }
+    body.fab-collapsed{--fab-h:96px;}
     html,body{height:100%}
     body{
       margin:0;
@@ -86,8 +87,12 @@
     .fab-btn:nth-child(2){animation:fab-in .3s ease forwards .05s}
     .fab-btn:nth-child(3){animation:fab-in .3s ease forwards .1s}
     .fab-btn:nth-child(4){animation:fab-in .3s ease forwards .15s}
+    .fab-btn:nth-child(5){animation:fab-in .3s ease forwards .2s}
     .fab-btn::after{content:attr(data-tip);position:absolute;right:100%;top:50%;transform:translateY(-50%) translateX(-4px);background:var(--ink);color:#fff;padding:4px 8px;border-radius:8px;font-size:.8rem;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s ease,transform .2s ease}
     .fab-btn:hover::after,.fab-btn:focus-visible::after{opacity:1;transform:translateY(-50%) translateX(0)}
+
+    .fab-btn.toggle{background:var(--gray)}
+    body.fab-collapsed .fab-stack .fab-btn:not(.toggle){display:none}
 
     /* History */
     .screen{display:none}.screen.active{display:block}
@@ -220,11 +225,12 @@
           <div class="link" id="toSettings">Settings</div>
         </div>
       </div>
-      <div class="fab-stack">
+      <div class="fab-stack" id="fabStack">
         <button class="fab-btn mint" id="add1" aria-label="-1" data-tip="-1">-1</button>
         <button class="fab-btn amber" id="add2" aria-label="-2" data-tip="-2">-2</button>
         <button class="fab-btn coral" id="add3" aria-label="-3" data-tip="-3">-3</button>
         <button class="fab-btn ghost" id="undo" aria-label="Undo" data-tip="Undo">↺</button>
+        <button class="fab-btn ghost toggle" id="fabToggle" aria-label="Hide quick add" data-tip="Hide">×</button>
       </div>
       <div id="toast" class="toast" role="status" aria-live="polite"></div>
     </section>
@@ -320,6 +326,7 @@
       const PREF_KEY='mvp_prefs_v1';
       const CHAL_KEY='mvp_chal_v1';
       const CHAL_COLLAPSE_KEY='mvp_chal_collapsed_v1';
+      const FAB_COLLAPSE_KEY='mvp_fab_collapsed_v1';
       const REC_KEY='mvp_recovery_hist_v1';
       const BONUS_KEY='mvp_bonus_hist_v1';
 
@@ -846,6 +853,25 @@
       });
     }
 
+    // ===== FAB collapse =====
+    function setupFabToggle(){
+      const t=document.getElementById('fabToggle'); if(!t) return;
+      const apply=collapsed=>{
+        document.body.classList.toggle('fab-collapsed', collapsed);
+        t.textContent=collapsed ? '+' : '×';
+        t.setAttribute('aria-label', collapsed ? 'Show quick add' : 'Hide quick add');
+        t.setAttribute('data-tip', collapsed ? 'Show' : 'Hide');
+        document.documentElement.style.setProperty('--fab-h', collapsed ? '96px' : '328px');
+      };
+      let st=(localStorage.getItem(FAB_COLLAPSE_KEY) ?? '0') === '1';
+      apply(st);
+      t.addEventListener('click', ()=>{
+        st=!st;
+        localStorage.setItem(FAB_COLLAPSE_KEY, st ? '1' : '0');
+        apply(st);
+      });
+    }
+
     // Register service worker
     if('serviceWorker' in navigator){
       navigator.serviceWorker.register('sw.js').catch(()=>{});
@@ -855,6 +881,7 @@
     (function init(){
       const st=load(); save(st.data, st.window);
       setupChallengeAccordion();
+      setupFabToggle();
       renderHabits();
       render(st.data, st.window);
     })();
