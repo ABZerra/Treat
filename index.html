@@ -89,7 +89,7 @@
     .fab-btn:nth-child(4){animation:fab-in .3s ease forwards .15s}
     .fab-btn:nth-child(5){animation:fab-in .3s ease forwards .2s}
     .fab-btn::after{content:attr(data-tip);position:absolute;right:100%;top:50%;transform:translateY(-50%) translateX(-4px);background:var(--ink);color:#fff;padding:4px 8px;border-radius:8px;font-size:.8rem;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s ease,transform .2s ease}
-    .fab-btn:hover::after,.fab-btn:focus-visible::after{opacity:1;transform:translateY(-50%) translateX(0)}
+    .fab-btn:hover::after,.fab-btn.show-tip::after{opacity:1;transform:translateY(-50%) translateX(0)}
 
     .fab-btn.toggle{background:var(--gray)}
     body.fab-collapsed .fab-stack .fab-btn:not(.toggle){display:none}
@@ -731,10 +731,21 @@
         }
       });
 
+codex/make-quick-action-button-labels-temporary-c5a03m
+      // Show quick action labels briefly on tap
+      $$('.fab-btn').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          btn.classList.add('show-tip');
+          setTimeout(()=>{
+            btn.classList.remove('show-tip');
+            btn.blur();
+          },1000);
+
       // Hide quick action labels shortly after activation
       $$('.fab-btn').forEach(btn=>{
         btn.addEventListener('click', ()=>{
           setTimeout(()=>btn.blur(), 1000);
+main
         });
       });
 
