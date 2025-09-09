@@ -247,6 +247,12 @@
           <button class="btn ghost" id="mark0">Reset</button>
         </div>
       </div>
+      <div class="table">
+        <table aria-describedby="historyTitle">
+          <thead><tr><th>Date</th><th>Points</th><th>Actions</th></tr></thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+      </div>
       <div class="edit-card">
         <h3 style="margin:0 0 8px;font-size:1rem;font-weight:800;color:var(--ink)">Import / Export</h3>
         <div class="form">
@@ -254,12 +260,6 @@
           <input type="file" id="importCsvInput" accept=".csv" style="display:none" />
           <button class="btn ghost" id="importCsv">Import CSV</button>
         </div>
-      </div>
-      <div class="table">
-        <table aria-describedby="historyTitle">
-          <thead><tr><th>Date</th><th>Points</th><th>Actions</th></tr></thead>
-          <tbody id="historyBody"></tbody>
-        </table>
       </div>
       </section>
 
