@@ -2,6 +2,10 @@
 
 Repo for Treat app.
 
+## Documentation
+
+See [docs/app-documentation.md](docs/app-documentation.md) for a full user and developer manual including a feature breakdown and underlying logic.
+
 ## Customization
 
 The app includes a Settings page where you can change small, medium, and large cheat values as well as the daily recovery amount. Habit values can also be adjusted under the Recovery section. Each completed habit grants bonus recovery equal to its value for that day. The recovery cycle remains daily and the 80% health threshold is fixed. Recovery changes and habit value edits apply only to future days and do not alter past records.
