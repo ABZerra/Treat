@@ -731,6 +731,13 @@
         }
       });
 
+      // Hide quick action labels shortly after activation
+      $$('.fab-btn').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          setTimeout(()=>btn.blur(), 1000);
+        });
+      });
+
     // Nav
     $('#toHistory').addEventListener('click', ()=>{
       $$('.screen').forEach(s=>s.classList.remove('active'));
