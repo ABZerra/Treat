@@ -247,6 +247,14 @@
           <button class="btn ghost" id="mark0">Reset</button>
         </div>
       </div>
+      <div class="edit-card">
+        <h3 style="margin:0 0 8px;font-size:1rem;font-weight:800;color:var(--ink)">Import / Export</h3>
+        <div class="form">
+          <button class="btn mint" id="exportCsv">Export CSV</button>
+          <input type="file" id="importCsvInput" accept=".csv" style="display:none" />
+          <button class="btn ghost" id="importCsv">Import CSV</button>
+        </div>
+      </div>
       <div class="table">
         <table aria-describedby="historyTitle">
           <thead><tr><th>Date</th><th>Points</th><th>Actions</th></tr></thead>
@@ -482,6 +490,36 @@
       render(out, st.window);
       const delta = n - prev;
       notify((delta>=0?'Set ':'Set ')+ds+' to '+(n>0?('-'+n):(n<0?('+'+(-n)):'0')));
+    }
+
+    function exportData(){
+      const {data}=load();
+      const rows=[["date","points"], ...data.map(r=>[r.date,r.n])];
+      const csv=rows.map(r=>r.join(',')).join('\n');
+      const blob=new Blob([csv],{type:'text/csv'});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      a.href=url; a.download='treat-history.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+    function importData(text){
+      const lines=text.split(/\r?\n/).map(l=>l.trim()).filter(l=>l);
+      if(lines[0] && lines[0].toLowerCase().includes('date')) lines.shift();
+      const imported=[];
+      for(const line of lines){
+        const [date,pts]=line.split(',');
+        const n=Math.max(0,Number(pts)||0);
+        if(date) imported.push({date:date.trim(),n});
+      }
+      if(imported.length===0){notify('No data found');return;}
+      const st=load();
+      const map=new Map(st.data.map(r=>[r.date,r.n]));
+      imported.forEach(r=>map.set(r.date,r.n));
+      const out=[...map.entries()].map(([date,n])=>({date,n})).sort((a,b)=>a.date.localeCompare(b.date));
+      save(out,st.window);
+      render(out,st.window);
+      notify('Imported '+imported.length+' rows');
     }
 
     // ===== Rendering =====
@@ -723,6 +761,18 @@
     $('#mark2').addEventListener('click', ()=> addPoints(getPickedDate(), PREFS.medium));
     $('#mark3').addEventListener('click', ()=> addPoints(getPickedDate(), PREFS.large));
     $('#mark0').addEventListener('click', ()=> setPoints(getPickedDate(), 0));
+
+    // Import / Export
+    $('#exportCsv').addEventListener('click', exportData);
+    $('#importCsv').addEventListener('click', ()=> $('#importCsvInput').click());
+    $('#importCsvInput').addEventListener('change', e=>{
+      const file=e.target.files[0];
+      if(!file) return;
+      const reader=new FileReader();
+      reader.onload=()=>{ importData(reader.result); };
+      reader.readAsText(file);
+      e.target.value='';
+    });
 
     // Challenge actions
     $('#chalStart').addEventListener('click', ()=>{
