@@ -731,6 +731,7 @@
         }
       });
 
+codex/make-quick-action-button-labels-temporary-c5a03m
       // Show quick action labels briefly on tap
       $$('.fab-btn').forEach(btn=>{
         btn.addEventListener('click', ()=>{
@@ -739,6 +740,12 @@
             btn.classList.remove('show-tip');
             btn.blur();
           },1000);
+
+      // Hide quick action labels shortly after activation
+      $$('.fab-btn').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          setTimeout(()=>btn.blur(), 1000);
+main
         });
       });
 
