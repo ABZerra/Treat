@@ -493,8 +493,11 @@
     }
 
     function exportData(){
-      const {data}=load();
-      const rows=[["date","points"], ...data.map(r=>[r.date,r.n])];
+      const st=load();
+      const start = st.data.length ? st.data.reduce((m,r)=>r.date<m?r.date:m, st.data[0].date) : todayStr();
+      const windowDays = diffDays(start, todayStr()) + 1;
+      const s = stats(st.data, windowDays);
+      const rows=[["date","points","type"], ...s.rows.map(r=>[r.date, Math.abs(r.n), r.n>0?'treat':'recovery'])];
       const csv=rows.map(r=>r.join(',')).join('\n');
       const blob=new Blob([csv],{type:'text/csv'});
       const url=URL.createObjectURL(blob);
@@ -508,9 +511,9 @@
       if(lines[0] && lines[0].toLowerCase().includes('date')) lines.shift();
       const imported=[];
       for(const line of lines){
-        const [date,pts]=line.split(',');
+        const [date,pts,type='treat']=line.split(',');
         const n=Math.max(0,Number(pts)||0);
-        if(date) imported.push({date:date.trim(),n});
+        if(date && String(type).trim().toLowerCase()!=='recovery') imported.push({date:date.trim(),n});
       }
       if(imported.length===0){notify('No data found');return;}
       const st=load();
