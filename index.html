@@ -649,6 +649,7 @@
           name:h.name,
           lastCompleted:h.lastCompleted||null,
           prevCompleted:h.prevCompleted||null,
+          lastDone:h.lastDone||h.lastCompleted||null,
           value:Number(h.value)||1
         }));
       }
@@ -669,17 +670,17 @@
           const span=document.createElement('span'); span.className='name'; span.textContent=`${h.name} (+${h.value})`;
           label.appendChild(cb); label.appendChild(span);
           row.appendChild(label);
-          const info=document.createElement('div');
-          info.className='muted small';
-          info.style.marginLeft='auto';
-          info.textContent = h.lastCompleted ? formatDate(h.lastCompleted) : '—';
-          row.appendChild(info);
-          wrap.appendChild(row);
-        });
+        const info=document.createElement('div');
+        info.className='muted small';
+        info.style.marginLeft='auto';
+        info.textContent = h.lastDone ? formatDate(h.lastDone) : '—';
+        row.appendChild(info);
+        wrap.appendChild(row);
+      });
       }
       function addHabit(name){
         const list=loadHabits();
-        list.push({id:Date.now().toString(),name,value:1,lastCompleted:null,prevCompleted:null});
+        list.push({id:Date.now().toString(),name,value:1,lastCompleted:null,prevCompleted:null,lastDone:null});
         saveHabits(list);
         renderHabits();
       }
@@ -698,9 +699,11 @@
         if(h.lastCompleted===today){
           h.lastCompleted = h.prevCompleted || null;
           h.prevCompleted = null;
+          h.lastDone = h.lastCompleted;
         } else {
           h.prevCompleted = h.lastCompleted || null;
           h.lastCompleted = today;
+          h.lastDone = today;
         }
         saveHabits(list);
         recalcBonus(today);
