@@ -373,6 +373,8 @@
       return `${d}/${m}/${String(y).slice(2)}`;
     };
 
+    let currentDay = todayStr();
+
 
       function load(){
         let rows=[];
@@ -642,7 +644,13 @@
       function loadHabits(){
         let list=[];
         try{list=JSON.parse(localStorage.getItem(HABITS_KEY)||'[]')}catch(e){list=[]}
-        return list.map(h=>({id:h.id,name:h.name,lastCompleted:h.lastCompleted||null,value:Number(h.value)||1}));
+        return list.map(h=>({
+          id:h.id,
+          name:h.name,
+          lastCompleted:h.lastCompleted||null,
+          prevCompleted:h.prevCompleted||null,
+          value:Number(h.value)||1
+        }));
       }
       function saveHabits(list){ localStorage.setItem(HABITS_KEY, JSON.stringify(list)); }
       function renderHabits(){
@@ -668,11 +676,10 @@
           row.appendChild(info);
           wrap.appendChild(row);
         });
-        recalcBonus(today);
       }
       function addHabit(name){
         const list=loadHabits();
-        list.push({id:Date.now().toString(),name,value:1,lastCompleted:null});
+        list.push({id:Date.now().toString(),name,value:1,lastCompleted:null,prevCompleted:null});
         saveHabits(list);
         renderHabits();
       }
@@ -688,7 +695,13 @@
         const list=loadHabits();
         const h=list.find(x=>x.id===id); if(!h) return;
         const today=todayStr();
-        h.lastCompleted = (h.lastCompleted===today) ? null : today;
+        if(h.lastCompleted===today){
+          h.lastCompleted = h.prevCompleted || null;
+          h.prevCompleted = null;
+        } else {
+          h.prevCompleted = h.lastCompleted || null;
+          h.lastCompleted = today;
+        }
         saveHabits(list);
         recalcBonus(today);
         renderHabits();
@@ -887,11 +900,23 @@
       navigator.serviceWorker.register('sw.js').catch(()=>{});
     }
 
+    // Auto-reset habits and stats when the day changes
+    setInterval(()=>{
+      const today=todayStr();
+      if(today!==currentDay){
+        currentDay=today;
+        recalcBonus(today);
+        renderHabits();
+        render();
+      }
+    }, 60*1000);
+
     // ===== Init =====
     (function init(){
       const st=load(); save(st.data, st.window);
       setupChallengeAccordion();
       setupFabToggle();
+      recalcBonus(todayStr());
       renderHabits();
       render(st.data, st.window);
     })();
