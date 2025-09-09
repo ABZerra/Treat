@@ -1,0 +1,17 @@
+{
+  "name": "treat",
+  "version": "1.0.0",
+  "description": "Repo for Treat app.",
+  "main": "sw.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "lint": "node lint.js",
+    "test": "npm run lint"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}
