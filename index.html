@@ -250,12 +250,13 @@
           <button class="btn mint"  id="mark1">-1</button>
           <button class="btn amber" id="mark2">-2</button>
           <button class="btn coral" id="mark3">-3</button>
-          <button class="btn ghost" id="mark0">Reset</button>
+          <button class="btn mint" id="markR">+1</button>
+          <button class="btn ghost" id="markClear">Clear</button>
         </div>
       </div>
       <div class="table">
         <table aria-describedby="historyTitle">
-          <thead><tr><th>Date</th><th>Points</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Date</th><th>Points</th><th>Description</th></tr></thead>
           <tbody id="historyBody"></tbody>
         </table>
       </div>
@@ -349,6 +350,7 @@
       function loadBonusHist(){
         try{BONUS_HIST=JSON.parse(localStorage.getItem(BONUS_KEY)||'[]')}catch(e){BONUS_HIST=[]}
         if(!Array.isArray(BONUS_HIST)) BONUS_HIST=[];
+        BONUS_HIST=BONUS_HIST.map(r=>({date:r.date,value:Number(r.value)||0,habits:r.habits||[]}));
         BONUS_HIST.sort((a,b)=>String(a.date).localeCompare(String(b.date)));
       }
 
@@ -407,14 +409,14 @@
       }
       function bonusOn(ds){
         const rec=BONUS_HIST.find(r=>r.date===ds);
-        return rec ? Number(rec.value)||0 : 0;
+        return rec ? {value:Number(rec.value)||0, habits:rec.habits||[]} : {value:0, habits:[]};
       }
       function recalcBonus(ds){
         const list=loadHabits();
-        const sum=list.filter(h=>h.lastCompleted===ds)
-          .reduce((s,h)=>s+Number(h.value||1),0);
+        const done=list.filter(h=>h.lastCompleted===ds);
+        const sum=done.reduce((s,h)=>s+Number(h.value||1),0);
         BONUS_HIST=BONUS_HIST.filter(r=>r.date!==ds);
-        if(sum>0) BONUS_HIST.push({date:ds,value:sum});
+        if(sum>0) BONUS_HIST.push({date:ds,value:sum,habits:done.map(h=>h.name)});
         BONUS_HIST.sort((a,b)=>a.date.localeCompare(b.date));
         saveBonusHist();
       }
@@ -429,14 +431,21 @@
           const d=new Date(start);d.setDate(start.getDate()+i);
           const ds=todayStr(d);
           const pts=byDate.get(ds)||0;
-          const recVal=recoveryOn(ds) + bonusOn(ds);
+          const b=bonusOn(ds);
+          const recBase=recoveryOn(ds);
+          const recVal=recBase + b.value;
           const recovered=Math.min(debt,recVal);
-          if(recovered>0){ debt-=recovered; rows.push({date:ds,n:-recovered}); }
-          if(pts>0){ debt+=pts; rows.push({date:ds,n:pts}); }
+          if(recovered>0){
+            let dailyUsed=Math.min(recBase,recovered);
+            let bonusUsed=Math.min(b.value,recovered-dailyUsed);
+            debt-=recovered;
+            rows.push({date:ds,n:-recovered,type:'recovery',daily:dailyUsed,bonus:bonusUsed,habits:b.habits});
+          }
+          if(pts>0){ debt+=pts; rows.push({date:ds,n:pts,type:'treat'}); }
         }
         const allowed=Math.floor(0.2*windowDays);
         const healthyPct=Math.round(100-(Math.min(windowDays,debt)/windowDays)*100);
-        const recToday=recoveryOn(todayStr()) + bonusOn(todayStr());
+        const recToday=recoveryOn(todayStr()) + bonusOn(todayStr()).value;
         let recovery=null;
         if(debt>allowed && recToday>0){
           const rec=new Date(end);rec.setDate(end.getDate()+Math.ceil((debt-allowed)/recToday));
@@ -501,12 +510,41 @@
       notify((delta>=0?'Set ':'Set ')+ds+' to '+(n>0?('-'+n):(n<0?('+'+(-n)):'0')));
     }
 
+    function describeTreat(n){
+      const parts=[]; let rem=n;
+      const sizes=[
+        {val:PREFS.large,label:'large'},
+        {val:PREFS.medium,label:'medium'},
+        {val:PREFS.small,label:'small'}
+      ];
+      sizes.forEach(s=>{
+        const c=Math.floor(rem/s.val);
+        if(c>0){ parts.push(`${c} ${s.label}${c>1?'s':''}`); rem-=c*s.val; }
+      });
+      if(rem>0) parts.push(`${rem} pt${rem>1?'s':''}`);
+      return parts.join(' + ');
+    }
+    function describeRow(r){
+      if(r.type==='recovery'){
+        const segs=[];
+        if(r.daily) segs.push(`Daily ${r.daily}`);
+        if(r.bonus){
+          const names=(r.habits||[]).join(' + ');
+          segs.push(names?`Habits ${names} (+${r.bonus})`:`Habits +${r.bonus}`);
+        }
+        const detail=segs.join(' / ');
+        return detail ? `Recovery: ${detail}` : 'Recovery';
+      } else {
+        return `Treat: ${describeTreat(r.n)}`;
+      }
+    }
+
     function exportData(){
       const st=load();
       const start = st.data.length ? st.data.reduce((m,r)=>r.date<m?r.date:m, st.data[0].date) : todayStr();
       const windowDays = diffDays(start, todayStr()) + 1;
       const s = stats(st.data, windowDays);
-      const rows=[["date","points","type"], ...s.rows.map(r=>[r.date, Math.abs(r.n), r.n>0?'treat':'recovery'])];
+      const rows=[["date","points","type","description"], ...s.rows.map(r=>[r.date, Math.abs(r.n), r.type, describeRow(r)])];
       const csv=rows.map(r=>r.join(',')).join('\n');
       const blob=new Blob([csv],{type:'text/csv'});
       const url=URL.createObjectURL(blob);
@@ -520,7 +558,10 @@
       if(lines[0] && lines[0].toLowerCase().includes('date')) lines.shift();
       const imported=[];
       for(const line of lines){
-        const [date,pts,type='treat']=line.split(',');
+        const parts=line.split(',');
+        const date=parts[0];
+        const pts=parts[1];
+        const type=parts[2]||'treat';
         const n=Math.max(0,Number(pts)||0);
         if(date && String(type).trim().toLowerCase()!=='recovery') imported.push({date:date.trim(),n});
       }
@@ -616,21 +657,11 @@
               const tr=document.createElement('tr');
               const td1=document.createElement('td'); td1.textContent=formatDate(r.date); tr.appendChild(td1);
               const td2=document.createElement('td'); const chip=document.createElement('span');
-              const cls = (r.n>=PREFS.large?'coral': r.n===PREFS.medium?'amber': (r.n===PREFS.small||r.n===-PREFS.small)?'mint':'neutral');
+              const cls = (r.n>=PREFS.large?'coral': r.n===PREFS.medium?'amber': r.n===PREFS.small?'mint': (r.n<0?'mint':'neutral'));
               chip.className='chip '+cls;
               chip.textContent = r.n>0 ? ('-'+r.n) : ('+'+(-r.n));
               td2.appendChild(chip); tr.appendChild(td2);
-              const td3=document.createElement('td'); const acts=document.createElement('div'); acts.className='row-actions';
-              [`-${PREFS.small}`,`-${PREFS.medium}`,`-${PREFS.large}`,`+${PREFS.small}`,'Reset'].forEach(lbl=>{
-                const b=document.createElement('button'); b.className='btn ghost xs'; b.textContent=lbl;
-                b.onclick=()=>{ if(lbl===`-${PREFS.small}`) addPoints(r.date,PREFS.small);
-                                if(lbl===`-${PREFS.medium}`) addPoints(r.date,PREFS.medium);
-                                if(lbl===`-${PREFS.large}`) addPoints(r.date,PREFS.large);
-                                if(lbl===`+${PREFS.small}`) addPoints(r.date,-PREFS.small);
-                                if(lbl==='Reset') setPoints(r.date,0); };
-                acts.appendChild(b);
-              });
-              td3.appendChild(acts); tr.appendChild(td3); body.appendChild(tr);
+              const td3=document.createElement('td'); td3.textContent=describeRow(r); tr.appendChild(td3); body.appendChild(tr);
             });
           }
         }
@@ -796,7 +827,14 @@
     $('#mark1').addEventListener('click', ()=> addPoints(getPickedDate(), PREFS.small));
     $('#mark2').addEventListener('click', ()=> addPoints(getPickedDate(), PREFS.medium));
     $('#mark3').addEventListener('click', ()=> addPoints(getPickedDate(), PREFS.large));
-    $('#mark0').addEventListener('click', ()=> setPoints(getPickedDate(), 0));
+    $('#markR').addEventListener('click', ()=> addPoints(getPickedDate(), -PREFS.small));
+    $('#markClear').addEventListener('click', ()=>{
+      const ds=getPickedDate();
+      setPoints(ds,0);
+      BONUS_HIST=BONUS_HIST.filter(r=>r.date!==ds);
+      saveBonusHist();
+      render();
+    });
 
     // Import / Export
     $('#exportCsv').addEventListener('click', exportData);
