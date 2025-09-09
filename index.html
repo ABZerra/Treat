@@ -730,8 +730,6 @@
           notify('Nothing to undo');
         }
       });
-
-codex/make-quick-action-button-labels-temporary-c5a03m
       // Show quick action labels briefly on tap
       $$('.fab-btn').forEach(btn=>{
         btn.addEventListener('click', ()=>{
@@ -740,12 +738,6 @@ codex/make-quick-action-button-labels-temporary-c5a03m
             btn.classList.remove('show-tip');
             btn.blur();
           },1000);
-
-      // Hide quick action labels shortly after activation
-      $$('.fab-btn').forEach(btn=>{
-        btn.addEventListener('click', ()=>{
-          setTimeout(()=>btn.blur(), 1000);
-main
         });
       });
 
