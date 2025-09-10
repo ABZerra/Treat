@@ -20,6 +20,7 @@
       --meter-a:#CDECC7;--meter-b:#BEE58C;--target:#FFC107;
       --r-lg:16px;--shadow:0 10px 30px rgba(0,0,0,.08);
       --fab-h:328px;
+      --nav-h:calc(64px + env(safe-area-inset-bottom));
     }
     body.fab-collapsed{--fab-h:96px;}
     html,body{height:100%}
@@ -31,7 +32,7 @@
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
       -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
     }
-    .wrap{width:100%;max-width:480px;padding:14px 14px calc(var(--fab-h,96px) + 24px);align-items:center;gap:12px;margin-bottom:16px}
+    .wrap{width:100%;max-width:480px;padding:14px 14px calc(var(--fab-h,96px) + var(--nav-h) + 24px);align-items:center;gap:12px;margin-bottom:16px}
 
     .brand{display:flex;align-items:center;gap:12px}
     .brand h1{margin:0;font-size:1.6rem;font-weight:900;letter-spacing:.2px}
@@ -73,13 +74,11 @@
     .small{font-size:.85rem}
     .muted{color:var(--muted)}
 
-    /* Footer + sticky actions */
-    .footer{margin-top:14px;display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:.9rem}
-    .link{text-decoration:underline;cursor:pointer}
+    /* Sticky actions */
     .btn.mint{background:var(--mint)}.btn.amber{background:var(--amber)}.btn.coral{background:var(--coral)}
     .fab-avoid{margin-right:72px}
 
-    .fab-stack{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom));right:16px;display:flex;flex-direction:column;gap:12px;z-index:100}
+    .fab-stack{position:fixed;bottom:calc(var(--nav-h) + 16px);right:16px;display:flex;flex-direction:column;gap:12px;z-index:100}
     .fab-btn{width:56px;height:56px;border-radius:50%;border:0;display:grid;place-items:center;font-weight:800;color:var(--ink);box-shadow:var(--shadow);transition:transform .2s ease,opacity .2s ease;position:relative;opacity:0;transform:translateY(20px);cursor:pointer}
     .fab-btn.mint{background:var(--mint)}.fab-btn.amber{background:var(--amber)}.fab-btn.coral{background:var(--coral)}.fab-btn.ghost{background:var(--gray)}
     @keyframes fab-in{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
@@ -93,6 +92,14 @@
 
     .fab-btn.toggle{background:var(--gray)}
     body.fab-collapsed .fab-stack .fab-btn:not(.toggle){display:none}
+
+    /* Bottom Navigation */
+    .bottom-nav{position:fixed;left:50%;transform:translateX(-50%);bottom:0;display:flex;justify-content:space-around;align-items:center;width:100%;max-width:480px;height:var(--nav-h);background:var(--panel);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);box-sizing:border-box}
+    .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--muted);background:none;border:0;font-size:.75rem;font-weight:800;cursor:pointer;transition:color .2s ease}
+    .nav-item .icon{width:24px;height:24px;transition:transform .2s ease,color .2s ease}
+    .nav-item.active{color:var(--ink)}
+    .nav-item.active .icon{color:var(--teal);transform:scale(1.1)}
+    .nav-item:focus{outline:2px solid var(--teal);outline-offset:2px}
 
     /* History */
     .screen{display:none}.screen.active{display:block}
@@ -219,12 +226,6 @@
       <h2 class="fab-avoid" style="margin:16px 0 8px;font-size:1.2rem;font-weight:800">Habits</h2>
       <div class="habit-list fab-avoid" id="habitList"></div>
 
-      <div class="footer fab-avoid" style="justify-content:flex-end">
-        <div style="display:flex;gap:8px;">
-          <div class="link" id="toHistory">History</div>
-          <div class="link" id="toSettings">Settings</div>
-        </div>
-      </div>
       <div class="fab-stack" id="fabStack">
         <button class="fab-btn mint" id="add1" aria-label="-1" data-tip="-1">-1</button>
         <button class="fab-btn amber" id="add2" aria-label="-2" data-tip="-2">-2</button>
@@ -316,6 +317,21 @@
   </section>
 
   </div>
+
+  <nav class="bottom-nav" role="navigation" aria-label="Main">
+    <button class="nav-item active" id="navHome" data-target="home" aria-label="Home">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" fill="currentColor"/></svg>
+      <span class="label">Home</span>
+    </button>
+    <button class="nav-item" id="navHistory" data-target="history" aria-label="History">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 3a9 9 0 1 0 9 9h-2a7 7 0 1 1-7-7v4l5 3 1-1.73-4-2.27V3z" fill="currentColor"/></svg>
+      <span class="label">History</span>
+    </button>
+    <button class="nav-item" id="navSettings" data-target="settings" aria-label="Settings">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.325 4.317a1 1 0 011.35-.447l.927.43a1.794 1.794 0 002.056-.287l.764-.724a1 1 0 011.414 0l2.286 2.286a1 1 0 010 1.414l-.724.764a1.794 1.794 0 00-.287 2.056l.43.927a1 1 0 01-.447 1.35l-1.004.502a1.794 1.794 0 000 3.196l1.004.502a1 1 0 01.447 1.35l-.43.927a1 1 0 01-1.35.447l-.927-.43a1.794 1.794 0 00-2.056.287l-.764.724a1 1 0 01-1.414 0l-2.286-2.286a1 1 0 010-1.414l.724-.764a1.794 1.794 0 00.287-2.056l-.43-.927a1 1 0 01.447-1.35l1.004-.502a1.794 1.794 0 000-3.196l-1.004-.502a1 1 0 01-.447-1.35l.43-.927zM12 15a3 3 0 100-6 3 3 0 000 6z" fill="currentColor"/></svg>
+      <span class="label">Settings</span>
+    </button>
+  </nav>
 
   <script type="module">
     import { CAT_ICON } from './icons/cat-icon.js';
@@ -810,27 +826,27 @@
       });
 
     // Nav
-    $('#toHistory').addEventListener('click', ()=>{
+    function showScreen(id){
       $$('.screen').forEach(s=>s.classList.remove('active'));
-      $('#history').classList.add('active');
-    });
-    $('#toSettings').addEventListener('click', ()=>{
-      $$('.screen').forEach(s=>s.classList.remove('active'));
-      $('#settings').classList.add('active');
+      $('#'+id).classList.add('active');
+      $$('.nav-item').forEach(n=>{
+        const active=n.dataset.target===id;
+        n.classList.toggle('active', active);
+        if(active) n.setAttribute('aria-current','page'); else n.removeAttribute('aria-current');
+      });
+    }
+    $('#navHome').addEventListener('click', ()=>showScreen('home'));
+    $('#navHistory').addEventListener('click', ()=>showScreen('history'));
+    $('#navSettings').addEventListener('click', ()=>{
+      showScreen('settings');
       $('#valSmall').value=PREFS.small;
       $('#valMedium').value=PREFS.medium;
       $('#valLarge').value=PREFS.large;
       $('#valRecovery').value=PREFS.recovery;
       renderHabitSettings();
     });
-    $('#backHome').addEventListener('click', ()=>{
-      $$('.screen').forEach(s=>s.classList.remove('active'));
-      $('#home').classList.add('active');
-    });
-    $('#backHome2').addEventListener('click', ()=>{
-      $$('.screen').forEach(s=>s.classList.remove('active'));
-      $('#home').classList.add('active');
-    });
+    $('#backHome').addEventListener('click', ()=>showScreen('home'));
+    $('#backHome2').addEventListener('click', ()=>showScreen('home'));
     $('#addHabit').addEventListener('click', ()=>{
         const name=$('#newHabitName').value.trim();
         if(name){
