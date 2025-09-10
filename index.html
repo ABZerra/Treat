@@ -265,9 +265,9 @@
       <div class="edit-card">
         <h3 style="margin:0 0 8px;font-size:1rem;font-weight:800;color:var(--ink)">Import / Export</h3>
         <div class="form">
-          <button class="btn mint" id="exportCsv">Export CSV</button>
-          <input type="file" id="importCsvInput" accept=".csv" style="display:none" />
-          <button class="btn ghost" id="importCsv">Import CSV</button>
+          <button class="btn mint" id="exportBackup">Export Backup</button>
+          <input type="file" id="importFileInput" accept=".json,.csv" style="display:none" />
+          <button class="btn ghost" id="importBackup">Import</button>
         </div>
       </div>
       </section>
@@ -579,19 +579,43 @@
 
     function exportData(){
       const st=load();
-      const start = st.data.length ? st.data.reduce((m,r)=>r.date<m?r.date:m, st.data[0].date) : todayStr();
-      const windowDays = diffDays(start, todayStr()) + 1;
-      const s = stats(st.data, windowDays);
-      const rows=[["date","points","type","description"], ...s.rows.map(r=>[r.date, Math.abs(r.n), r.type, describeRow(r)])];
-      const csv=rows.map(r=>r.join(',')).join('\n');
-      const blob=new Blob([csv],{type:'text/csv'});
+      const payload={
+        prefs:PREFS,
+        recHist:REC_HIST,
+        bonusHist:BONUS_HIST,
+        habits:loadHabits(),
+        data:st.data
+      };
+      const blob=new Blob([JSON.stringify(payload)],{type:'application/json'});
       const url=URL.createObjectURL(blob);
       const a=document.createElement('a');
-      a.href=url; a.download='treat-history.csv';
+      a.href=url; a.download='treat-backup.json';
       a.click();
       URL.revokeObjectURL(url);
     }
     function importData(text){
+      try{
+        const obj=JSON.parse(text);
+        if(obj && obj.data){
+          const st=load();
+          if(obj.prefs && typeof obj.prefs==='object'){ Object.assign(PREFS,obj.prefs); savePrefs(); }
+          if(Array.isArray(obj.recHist)){ REC_HIST=obj.recHist.map(r=>({date:r.date,value:Number(r.value)||0})); saveRecHist(); }
+          if(Array.isArray(obj.bonusHist)){ BONUS_HIST=obj.bonusHist.map(r=>({date:r.date,value:Number(r.value)||0,habits:r.habits||[],manual:Number(r.manual)||0})); saveBonusHist(); }
+          if(Array.isArray(obj.habits)){ saveHabits(obj.habits); renderHabits(); renderHabitSettings(); }
+          const map=new Map(st.data.map(r=>[r.date,r.n]));
+          obj.data.forEach(r=>{
+            const ds=String(r.date||'').slice(0,10);
+            const n=Math.max(0,Number(r.n)||0);
+            if(ds && n>0) map.set(ds,n);
+          });
+          const out=[...map.entries()].map(([date,n])=>({date,n})).sort((a,b)=>a.date.localeCompare(b.date));
+          save(out,PREFS.window);
+          render(out,PREFS.window);
+          notify('Imported backup');
+          return;
+        }
+      }catch(e){}
+
       const lines=text.split(/\r?\n/).map(l=>l.trim()).filter(l=>l);
       if(lines[0] && lines[0].toLowerCase().includes('date')) lines.shift();
       const imported=[];
@@ -599,17 +623,16 @@
         const parts=line.split(',');
         const date=parts[0];
         const pts=parts[1];
-        const type=parts[2]||'treat';
         const n=Math.max(0,Number(pts)||0);
-        if(date && String(type).trim().toLowerCase()!=='recovery') imported.push({date:date.trim(),n});
+        if(date && n>0) imported.push({date:date.trim(),n});
       }
       if(imported.length===0){notify('No data found');return;}
       const st=load();
       const map=new Map(st.data.map(r=>[r.date,r.n]));
       imported.forEach(r=>map.set(r.date,r.n));
       const out=[...map.entries()].map(([date,n])=>({date,n})).sort((a,b)=>a.date.localeCompare(b.date));
-      save(out,st.window);
-      render(out,st.window);
+      save(out,PREFS.window);
+      render(out,PREFS.window);
       notify('Imported '+imported.length+' rows');
     }
 
@@ -875,9 +898,9 @@
     });
 
     // Import / Export
-    $('#exportCsv').addEventListener('click', exportData);
-    $('#importCsv').addEventListener('click', ()=> $('#importCsvInput').click());
-    $('#importCsvInput').addEventListener('change', e=>{
+    $('#exportBackup').addEventListener('click', exportData);
+    $('#importBackup').addEventListener('click', ()=> $('#importFileInput').click());
+    $('#importFileInput').addEventListener('change', e=>{
       const file=e.target.files[0];
       if(!file) return;
       const reader=new FileReader();
