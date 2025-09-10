@@ -579,6 +579,11 @@
 
     function exportData(){
       const st=load();
+codex/review-export-and-import-functions-k703l4
+      const rows=[["date","points"], ...st.data.map(r=>[r.date,r.n])];
+      const csv=rows.map(r=>r.join(',')).join('\n');
+      const blob=new Blob([csv],{type:'text/csv'});
+
       const payload={
         prefs:PREFS,
         recHist:REC_HIST,
@@ -587,6 +592,7 @@
         data:st.data
       };
       const blob=new Blob([JSON.stringify(payload)],{type:'application/json'});
+main
       const url=URL.createObjectURL(blob);
       const a=document.createElement('a');
       a.href=url; a.download='treat-backup.json';
