@@ -579,10 +579,7 @@
 
     function exportData(){
       const st=load();
-      const start = st.data.length ? st.data.reduce((m,r)=>r.date<m?r.date:m, st.data[0].date) : todayStr();
-      const windowDays = diffDays(start, todayStr()) + 1;
-      const s = stats(st.data, windowDays);
-      const rows=[["date","points","type","description"], ...s.rows.map(r=>[r.date, Math.abs(r.n), r.type, describeRow(r)])];
+      const rows=[["date","points"], ...st.data.map(r=>[r.date,r.n])];
       const csv=rows.map(r=>r.join(',')).join('\n');
       const blob=new Blob([csv],{type:'text/csv'});
       const url=URL.createObjectURL(blob);
@@ -599,9 +596,8 @@
         const parts=line.split(',');
         const date=parts[0];
         const pts=parts[1];
-        const type=parts[2]||'treat';
         const n=Math.max(0,Number(pts)||0);
-        if(date && String(type).trim().toLowerCase()!=='recovery') imported.push({date:date.trim(),n});
+        if(date && n>0) imported.push({date:date.trim(),n});
       }
       if(imported.length===0){notify('No data found');return;}
       const st=load();

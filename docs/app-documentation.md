@@ -26,7 +26,7 @@ Treat helps people manage indulgences without rigid dieting. The app tracks "tre
 - **Daily Recovery & Habits** – The app subtracts a recovery amount each day. Completed habits grant bonus recovery equal to their value for that day. Bonuses stack with manual entries.
 - **Streaks & Predictions** – `stats` also calculates current and best healthy streaks. If the user exceeds the allowance, the app estimates the date health returns to 80% based on daily recovery.
 - **Challenge Mode** – A separate tracker with strict allowance and no decay. Users choose a horizon; Treat counts treats in that range and reports remaining budget.
-- **Import/Export** – CSV import merges new rows into existing history. Export produces a full CSV with treat and recovery rows for the entire history.
+- **Import/Export** – Export creates a CSV of raw treat history. Importing a CSV merges those rows into existing data and recalculates recovery.
 - **Offline-first PWA** – A service worker caches core files (`sw.js`) so the app works offline and updates in the background.
 
 ## Hidden Mechanisms
