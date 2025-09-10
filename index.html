@@ -23,12 +23,13 @@
       --nav-h:calc(64px + env(safe-area-inset-bottom));
     }
     body.fab-collapsed{--fab-h:96px;}
-    html,body{height:100%}
+    html,body{min-height:100%}
     body{
       margin:0;
       background:var(--bg);
       color:var(--ink);
       display:flex;justify-content:center;
+      padding-bottom:var(--nav-h);
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
       -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
     }
